@@ -34,7 +34,7 @@ export default class Database{
                             
                             ["Users","PROJECT","STEP","CATEGORIE","LOCALISATION",
                             "AUTORISATION","StaffMember","Work","Article","ArticleConsume",
-                            "WorkTools","WorkToolsUsage"]
+                            "WorkTools","WorkToolsUsage","Document"]
                             .forEach(table=>{
                                 this.db.executeSql('DROP TABLE IF EXISTS '+table)                        
                             })
@@ -112,9 +112,32 @@ export default class Database{
                  .join('and ')
         return this.executeQuery("DELETE FROM "+tableName+' tb WHERE '+queryColumn, []);
     }
+    update(tableName:string ,fileds:{[key:string]:any}, where:{[key:string]:any}){
 
+        let queryColumn ="";
+        let set = Object.keys(fileds)
+                    .map(key=>{return key.concat("='").concat(fileds[key]).concat("'")})
+                    .join(',')
+        if (where){
+            queryColumn = Object.keys(where)
+                  .map((key:string)=>{ return key.concat(" = '").concat(where[key]).concat("'") })
+                 .join(' and ')
+        }
 
+        return this.executeQuery("UPDATE "+tableName+' SET '+set+' WHERE '+queryColumn, []);
+    }
+    insert(tableName:string ,fileds:{[key:string]:any}){
+
+        let queryColumn = Object.keys(fileds)
+                    .join(',')
+        let values = Object.keys(fileds)
+                    .map((key:string)=>{ return "'".concat(fileds[key]).concat("'") })
+                    .join(',')
+
+        return this.executeQuery("INSERT INTO  "+ tableName +'('+ queryColumn +') VALUES('+ values +')', []);
+    }
     executeQuery(presparedQuery :string, args : Array<string>):Promise<SQLite.ResultSetRowList> {
+        console.log("QUERY =>" , presparedQuery)
         return new Promise((resolve) => {
             this.db.transaction((tx) => {
                     tx.executeSql( presparedQuery, args ).then(([tx, results]) => {

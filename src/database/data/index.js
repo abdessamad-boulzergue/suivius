@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS PROJECT (
     id_step INTEGER NOT NULL,
     id_categorie INTEGER NOT NULL
 );
-CREATE TABLE IF NOT EXISTS LOCALISATION(id_projet INTEGER UNIQUE NOT NULL,site VARCHAR(100) , region VARCHAR(100),province VARCHAR(100),addresse VARCHAR(100),type_prestation VARCHAR(100));
-CREATE TABLE IF NOT EXISTS AUTORISATION (id_projet INTEGER UNIQUE NOT NULL, date_demande DATE, date_commission DATE, date_decision DATE, date_paiment DATE,date_sign DATE);
+CREATE TABLE IF NOT EXISTS LOCALISATION(id_project INTEGER UNIQUE NOT NULL,site VARCHAR(100) , region VARCHAR(100),province VARCHAR(100),addresse VARCHAR(100),type_prestation VARCHAR(100));
+CREATE TABLE IF NOT EXISTS AUTORISATION (id_project INTEGER UNIQUE NOT NULL, date_demande DATE, date_commission DATE, date_decision DATE, date_paiment DATE,date_sign DATE);
 CREATE TABLE IF NOT EXISTS STEP (id INTEGER UNIQUE NOT NULL, title VARCHAR(100)  NOT NULL);
 CREATE TABLE IF NOT EXISTS CATEGORIE (id INTEGER UNIQUE NOT NULL, title VARCHAR(100)  NOT NULL);
 CREATE TABLE IF NOT EXISTS Product (ID INTEGER UNIQUE NOT NULL, NAME VARCHAR(100) UNIQUE NOT NULL, DESCRIPTION, IMAGE, PRICE DOUBLE);
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS Article (id INTEGER UNIQUE NOT NULL ,title VARCHAR(50
 CREATE TABLE IF NOT EXISTS  ArticleConsume (id_article INTEGER  NOT NULL ,id_project INTEGER NOT NULL, quantity INTEGER);
 CREATE TABLE IF NOT EXISTS WorkTools (id INTEGER UNIQUE NOT NULL ,title VARCHAR(50) NOT NULL);
 CREATE TABLE IF NOT EXISTS  WorkToolsUsage (id_tool INTEGER  NOT NULL ,id_project INTEGER NOT NULL, nbr_hour VARCHAR(10));
+CREATE TABLE IF NOT EXISTS  Document (id INTEGER  NOT NULL ,id_project INTEGER NOT NULL, path VARCHAR(100), data VARCHAR);
 `
 
 export const data_insert=  `
@@ -32,9 +33,9 @@ INSERT INTO  WorkTools      VALUES("1","Balayeuses")
 INSERT INTO  WorkTools      VALUES("2","Compresseur")
 INSERT INTO  WorkTools      VALUES("3","Sablage")
 
-INSERT INTO  Article        VALUES("1","Balayeuses")
-INSERT INTO  Article        VALUES("2","Compresseur")
-INSERT INTO  Article        VALUES("3","Sablage")
+INSERT INTO  Article        VALUES("1","Article 1")
+INSERT INTO  Article        VALUES("2","Article 2")
+INSERT INTO  Article        VALUES("3","Article 3")
 
 INSERT INTO  STEP           VALUES("1","Travaux")
 INSERT INTO  STEP           VALUES("2","Etude")
@@ -48,12 +49,12 @@ INSERT INTO  PROJECT        VALUES("1","project inwi travaux", "description p1",
 INSERT INTO  PROJECT        VALUES("2","project inwi Etude", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","2","2")
 INSERT INTO  PROJECT        VALUES("3","project inwi Autorization", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","3","3")
 
-INSERT INTO  LOCALISATION   VALUES("1","INWI","Rabat-Salé","","","propre")
+INSERT INTO  LOCALISATION   VALUES("1","INWI","Rabat-Salé","---","---","propre")
 INSERT INTO  AUTORISATION   VALUES("1","2012-10-10","2012-10-12","2012-10-19","2012-1-10","2012-11-10")
 
-INSERT INTO Work            VALUES("1","1","","")
-INSERT INTO Work            VALUES("2","1","","")
-INSERT INTO Work            VALUES("3","1","","")
+INSERT INTO Work            VALUES("1","1","8","1:30")
+INSERT INTO Work            VALUES("2","1","8","1")
+INSERT INTO Work            VALUES("3","1","3:30","")
 
 INSERT INTO ArticleConsume  VALUES("1","1","")
 INSERT INTO ArticleConsume  VALUES("2","1","")

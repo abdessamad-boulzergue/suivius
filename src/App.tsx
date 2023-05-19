@@ -6,30 +6,20 @@ import {NativeBaseProvider} from 'native-base';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ThemeProvider from './theming/ThemeProvider';
 import 'react-native-gesture-handler';
-import DatabaseProvider from './database/DatabaseProvider';
+import { StoreDaoProvider } from './stores/daoStores';
 const App = () => {
-    /*
-  React.useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      console.log('Connection type', state.type);
-      console.log('Is connected?', state.isConnected);
-    });
-    SplashScreen.hide();
-    return function cleanup() {
-      unsubscribe();
-    };
-  }, []);*/
+
   return (
     <StoreProvider>
         <NativeBaseProvider>
         <ThemeProvider>
-            <DatabaseProvider>
+                <StoreDaoProvider>
                 <NavigationContainer>
                     <GestureHandlerRootView style={{flex: 1}}>
                         <RootStack />
                     </GestureHandlerRootView>
                 </NavigationContainer>
-          </DatabaseProvider>
+                </StoreDaoProvider>
           </ThemeProvider>
         </NativeBaseProvider>
     

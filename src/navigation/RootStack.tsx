@@ -26,7 +26,7 @@ const RootStack = observer(() => {
 
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 3000); // Change the duration (3000ms = 3s) as needed
+        }, 1000); // Change the duration (3000ms = 3s) as needed
 
         return () => clearTimeout(timer);
     }, []);

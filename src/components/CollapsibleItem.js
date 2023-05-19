@@ -4,17 +4,18 @@ import {  Text, View, Image,StyleSheet,Dimensions,
 } from 'react-native';
 import {recommended ,liked,loved,heart} from  '../assets';
 import Collapsible from 'react-native-collapsible';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default  CollapsibleItem= ({ title, children }) => {
 
     const [isCollapsed, setIsCollapsed] = useState(true);
-
+    const [iconName, setIconName] = useState("chevron-forward");
     return(
         <View>
         <TouchableOpacity onPress={()=> setIsCollapsed(!isCollapsed) }>
             <View style ={styles.listItem}>
                 <Text style ={styles.listItemTitle}>{title}</Text>
-                <Image source={isCollapsed? liked.imageSource:recommended.imageSource} style={styles.interactInput}/>
+                <Icon size={20} color="black" name={isCollapsed?"chevron-forward":"chevron-down"} style={styles.interactInput} />
             </View>
             </TouchableOpacity>
             <View>
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
     listItem:{
         display:"flex",
         flexDirection: 'row',
-        padding:5,
+        padding:10,
         alignItems: 'flex-start',
         justifyContent:'space-between',
         backgroundColor:'#fafafa'

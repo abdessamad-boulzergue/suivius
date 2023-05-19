@@ -1,24 +1,59 @@
 
-import {useState} from 'react'
-import { View,Image,TextInput,StyleSheet } from "react-native";
+import {useState,useEffect} from 'react'
+import { View,Text,TextInput,StyleSheet } from "react-native";
 import { user } from '../assets'
+import Icon from 'react-native-vector-icons/Ionicons';
 
-const SuiviInputText=({value,placeholder,righImage,style}:any)=>{
-    const [innerStyle,setInnerStyle] = useState(style || styles)
+const SuiviInputText=({value,placeholder,title,icon,style,editable,keyboardType ,onChangeText}:any)=>{
+
+    onChangeText = onChangeText || (()=>{});
+    keyboardType = keyboardType || 'ascii-capable';
+    const [containerStyle,setContainerStyle] = useState(styles.container)
+    const [inputStyle,setInputStyle] = useState(styles.input);
+    const [titleStyle,setTitleStyle] = useState(styles.title);
+    const [textValue,setTextValue] = useState("");
+    useEffect(()=>{
+        if(value){
+            console.log(title," ", value)
+            setTextValue(value)
+        }
+        if(style){
+            setInputStyle({...inputStyle,
+                color:style.color || styles.input.color
+            })
+            setTitleStyle({...titleStyle,
+                color:style.titleColor || styles.title.color
+            })
+            setContainerStyle({...containerStyle,
+                borderWidth:isNaN(style.borderWidth)? styles.container.borderWidth :style.borderWidth,
+                borderColor:style.borderColor || styles.container.borderColor,
+                borderRadius:style.borderRadius || styles.container.borderRadius,
+                backgroundColor:style.backgroundColor || styles.container.backgroundColor,
+            });
+        }
+    },[value]);
+
+    const updateText=(text:string)=>{
+        setTextValue(text);
+        onChangeText(text);
+    }
+
     return(
-        <View style={innerStyle?.SectionStyle}>
-            <TextInput
-                style={innerStyle?.input}
-                placeholder={placeholder}
-                value = {value}
-                editable={false}
-            />
-            { righImage &&
-            <Image
-                source={righImage} //Change your icon image here
-                style={innerStyle.ImageStyle}
-            />
-}
+        <View>
+            {title &&
+            <Text style={titleStyle}>{title}</Text>
+            }
+            <View style={{...containerStyle,flexDirection: 'row',alignItems: 'center',}}>
+                <TextInput
+                    style={inputStyle}
+                    placeholder={placeholder}
+                    value = {textValue}
+                    keyboardType={keyboardType}
+                    onChangeText={txt=>updateText(txt)}
+                    editable={editable}
+                />
+                <Icon style={{marginRight:10}} name={icon} color="black" size={15}/>
+            </View>
         </View>
     )
 
@@ -28,48 +63,26 @@ export default SuiviInputText;
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex:1,
-        marginTop:'40%',
-        alignItems:'center'
-    },
-    loginBtn:{
-        width:200,
-        margin:30
-    },
-    shadow: {
-        flex: 1,
-        width: undefined,
-        height: undefined,
-    },
 
+    title:{
+        color:"black",
+        marginLeft:10,
+    },
     input: {
         flex: 1,
-        color:'black'
+        color:'#000',
+        marginLeft:10,
+        height: 40,
+        alignSelf:'center'
     },
-    ImageStyle: {
-        padding: 10,
-        margin: 5,
-        height: 25,
-        width: 25,
-        resizeMode: 'stretch',
-        alignItems: 'center',
-    },
-    button: {
-        width: 180
-    },
-    error: {
-        color: 'red',
-        marginBottom: 20,
-    },
-    SectionStyle: {
+    container: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
         borderWidth: 0.5,
         borderColor: '#000',
-        height: 40,
+        height: 30,
         borderRadius: 15,
-        margin: 15,
+        margin:5
     },
 });

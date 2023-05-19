@@ -9,51 +9,34 @@ import { Project } from '../database/dao/ProjectDao';
 import { useDao } from '../stores/daoStores';
 import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
-import WorkToolsUsageDao from '../database/dao/WorkToolsUsageDao';
-import { WorkToolsUsage } from '../database/dao/WorkToolsUsageDao';
-import { format } from 'date-fns';
-import { TABLES } from '../database/dao/constants';
 
 
-interface ListOverViewState {
-    pages:Array<{title:string,data:Array<ArticleConsume>}>,
-    selectedOption:string,
-    selectData:Array<any>
-  }
 
-const ToolsActivityComponent =({route,navigation}:any) => {
+const ArticleConsumeComponent =({route,navigation}:any) => {
 
-    const selectedOption="";
     const  project:Project = route.params.project;
-    const {workToolsUsageDao} = useDao();
+    const {articleConsumeDao} = useDao();
     const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
 
     useEffect(()=>{
         getArticleConsumes();
     },[])
     const  getArticleConsumes= () => {
-        workToolsUsageDao.getByIdProject(project.id).then(
+        articleConsumeDao.getByIdProject(project.id).then(
             (consumes)=>{
-                console.log(consumes)
+                console.log("consumes >+++>>" , consumes)
                 setPages([{title:"", data:consumes}]);
             }
         );
     }
-    const getDate=(time:string):Date=>{
-        const [hours, minutes] = time.split(':').map(Number);
-        const date = new Date(); // Create a new Date object
-        date.setHours(hours||0, minutes||0);
-        return date;
+    const updateQuantity =(quantity:number,id_article:number)=>{
+    
+        articleConsumeDao.updateQuantity(project.id,id_article,quantity)
     }
   const renderSeparator = () => {
     return <View style={styles.separator} />;
   };
-  const onDateChange =(date:Date,id_tool:number,key:string)=>{
-    
-    const fields :{[key:string]:any} ={};
-    fields[key]=format(date,"HH:mm");
-    workToolsUsageDao.updateDate(project.id,id_tool,fields)
-}
+
 
         return (
             <View style={{flex: 1,}}>
@@ -61,16 +44,17 @@ const ToolsActivityComponent =({route,navigation}:any) => {
                     <Text style={styles.label}>rechercher collaborateur :</Text>
                         <InputSearch placeholder="recherher un collaborateur"></InputSearch>
                 </View>
+
                 <SectionList sections={pages}
-                 renderItem={({item}:{item: WorkToolsUsage}) =>{ 
+                 renderItem={({item}:{item: ArticleConsume}) =>{ 
                     
                     return(
                         <View style ={styles.listItem}>
                             <View style={{width:"25%"}}>
-                                <Text style ={styles.listItemTitle}>{(item.tool?.title)}</Text>
+                                <Text style ={styles.listItemTitle}>{(item.article?.title)}</Text>
                             </View>
                             <View style={{width:"30%"}}>
-                                 <SuiviInputDate onChange={(date:Date)=>onDateChange(date,item.id_tool,TABLES.WorkToolsUsage.fields.NBR_HOUR.name)} date={getDate(item.nbr_hour)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
+                                 <SuiviInputText key={item.quantity} onChangeText={(txt:number)=>updateQuantity(txt,item.id_article)} keyboardType='numeric' editable={true} value={item.quantity+""} title="Qte"  style={styles.inputDate}></SuiviInputText>
                              </View>
                         </View>
                     )
@@ -150,8 +134,8 @@ const styles = StyleSheet.create({
     flex:1,
      flexDirection:'row',
      padding:10,
-     justifyContent:'space-between',
      alignItems: 'center',
+     justifyContent:"space-between"
     },
     listItemImage:{
         width:'98%',
@@ -167,4 +151,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default ToolsActivityComponent;
+export default ArticleConsumeComponent;

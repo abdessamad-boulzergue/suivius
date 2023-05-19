@@ -9,6 +9,7 @@ import { ROUTES } from '../constants/routes';
 import ProjectDao, { Project } from '../database/dao/ProjectDao';
 import DatabaseContext from '../database/DatabaseContext';
 import StepDao, { Step } from '../database/dao/StepDao';
+import { useDao } from '../stores/daoStores';
 
 
 interface ListOverViewState {
@@ -22,20 +23,19 @@ interface ListOverViewState {
 const ListProjectsOverViews = ({route}:any) => {
 
     const style = route.params.style || styles ;
-    const {interact,categorie,onProjectView} = route.params;
-    const projectRepo = new ProjectDao(useContext(DatabaseContext));
-    const stepRepo = new StepDao(useContext(DatabaseContext));
+    const {interact,categorie,onProjectView,key} = route.params;
+    const {projectDao,stepDao} = useDao()
     const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
     const [state, setState] = useState<ListOverViewState>({
         pages:[],
         style:style,
         selectedOption:"",
         steps:[],
-        onProjectView:onProjectView
+        onProjectView:onProjectView || (()=>{})
     });
 
     const  getAllProjects = () => {
-        projectRepo.getByCategorie(categorie).then(
+        projectDao.getByCategorie(categorie).then(
             (projects)=>{
                 setPages([{title:"", data:projects}]);
             }
@@ -43,19 +43,19 @@ const ListProjectsOverViews = ({route}:any) => {
     }
 
     const  getAllSteps = () => {
-        stepRepo.getAll()
+        stepDao.getAll()
         .then( steps=>{ setState({...state,steps})});
     }
 
     useEffect(() => {
-        getAllProjects();
+       getAllProjects();
         getAllSteps();
       }, []);
 
    const  onStepChange =(item:string)=>{
     setState({...state,selectedOption:item});
     if(item!="-1"){
-        projectRepo.getByStepAndCategorie(item,categorie)
+        projectDao.getByStepAndCategorie(item,categorie)
         .then( data=>{ setPages([{title:"", data:data}])});
     }else{
         getAllProjects();
@@ -90,7 +90,7 @@ const ListProjectsOverViews = ({route}:any) => {
                 <SectionList sections={pages}
                  renderItem={({item}) =>{ 
                     return(
-                    <OverViewItem   style={state.style} item = {item} interact={interact}
+                    <OverViewItem key={key}  style={state.style} item = {item} interact={interact}
                                     onView ={(vItem:any) => {   state.onProjectView(vItem)  }}
                                                     />
                     )}}

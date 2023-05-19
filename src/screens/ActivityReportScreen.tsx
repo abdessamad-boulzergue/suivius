@@ -6,11 +6,15 @@ import ListOverViews from './ListProjectsOverViews';
 import {liked} from '../assets';
 import StaffActivity from './StaffActivityComponent';
 import ToolsActivityComponent from './ToolsActivityComponent';
-import ModalExample from './Modal';
+import {ModalExample} from './Modal';
+import ArticleConsumeComponent from './ArticleConsumeComponent';
+import ImageGrid from './ImageGridComponent';
 
 const Tab = createMaterialTopTabNavigator();
 
-export default function ActivityReportScreen() {
+export default function ActivityReportScreen({route}:any) {
+
+    const project = route.params?.project;
 
     const pages=[
         {
@@ -52,27 +56,23 @@ export default function ActivityReportScreen() {
       <Tab.Navigator>
         <Tab.Screen name="Staff" component={StaffActivity} 
           initialParams={{ 
-            interact:true,
-            pages:pages
+            project:project
           }}
         />
         <Tab.Screen name="Materiaux" component={ToolsActivityComponent} 
 
           initialParams={{ 
-            interact:true,
-            pages:pages
+            project:project
           }}
         />
-        <Tab.Screen name="BQQ" component={ListOverViews} 
+        <Tab.Screen name="BQQ" component={ArticleConsumeComponent} 
           initialParams={{ 
-            interact:true,
-            pages:pages
+            project:project
           }}
         />
-        <Tab.Screen name="Photo" component={ModalExample} 
+        <Tab.Screen name="Photo" component={ImageGrid} 
           initialParams={{ 
-            interact:true,
-            pages:pages
+            project:project
           }}
         />
       </Tab.Navigator>

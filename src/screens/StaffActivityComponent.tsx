@@ -1,40 +1,47 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Text,  StyleSheet,  SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView
 } from 'react-native';
 
-import { Picker } from '@react-native-picker/picker';
-import { Image } from 'native-base';
-import { loved } from '../assets';
-import SuiviInputText from '../components/InputText';
+
 import SuiviInputDate from '../components/InputDate';
 import InputSearch from '../components/InputSearch';
-
-
-interface ListOverViewState {
-    pages:Array<{title:string,data:Array<any>}>,
-    selectedOption:string,
-    selectData:Array<any>
-  }
+import { Project } from '../database/dao/ProjectDao';
+import { useDao } from '../stores/daoStores';
+import { Work } from '../database/dao/WorkDao';
+import { TABLES } from '../database/dao/constants';
+import { format } from 'date-fns';
 
 const StaffActivityComponent = ({route,navigation}:any) => {
-    
+
     const selectedOption="";
-    const {interact ,pages} = route.params;
-    const selectData=[
-          { id: 1, title: 'Item 1', date: '2023-05-01', description: 'Description 1' },
-          { id: 2, title: 'Item 2', date: '2023-05-02', description: 'Description 2' },
-          { id: 3, title: 'Item 3', date: '2023-05-03', description: 'Description 3' },
-          // Add more data as needed
-    ];
-    const [state, setState] = useState<ListOverViewState>({
-        pages:pages,
-        selectedOption:"",
-        selectData :selectData
-    });
+    const  project:Project = route.params.project;
+    const {workDao} = useDao();
+    const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
 
-
+    useEffect(()=>{
+        getStaffWOrk();
+    },[])
+    const  getStaffWOrk= () => {
+        workDao.getByIdProject(project.id).then(
+            (work)=>{
+                console.log(work)
+                setPages([{title:"", data:work}]);
+            }
+        );
+    }
+    const getDate=(time:string):Date=>{
+        const [hours, minutes] = time.split(':').map(Number);
+        const date = new Date(); // Create a new Date object
+        date.setHours(hours||0, minutes||0);
+        return date;
+    }
+    const onDateChange =(date:Date,id_staff:number,key:string)=>{
     
+        const fields :{[key:string]:any} ={};
+        fields[key]=format(date,"HH:mm");
+        workDao.updateDate(project.id,id_staff,fields)
+    }
   const renderSeparator = () => {
     return <View style={styles.separator} />;
   };
@@ -47,19 +54,20 @@ const StaffActivityComponent = ({route,navigation}:any) => {
                         <InputSearch placeholder="recherher un collaborateur"></InputSearch>
                 </View>
                 <SectionList sections={pages}
-                 renderItem={({item}) =>{ 
+                 renderItem={({item}:{item: Work}) =>{ 
+                    
                     return(
                         <View style ={styles.listItem}>
                             <View style={{width:"25%"}}>
-                                <Text style ={styles.listItemTitle}>{(item.title)}</Text>
+                                <Text style ={styles.listItemTitle}>{(item.id_staff)}</Text>
                             </View>
                             <View style={{width:"30%"}}>
-                                 <SuiviInputDate mode="time" ></SuiviInputDate>
+                                 <SuiviInputDate onChange={(date:Date)=>onDateChange(date,item.id_staff,TABLES.Work.fields.NBR_HOUR.name)} date={getDate(item.nbr_hour)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
                              </View>
                              <View style={{width:"30%"}}>
-                                <SuiviInputDate mode="time" ></SuiviInputDate>
+                                <SuiviInputDate  onChange={(date:Date)=>onDateChange(date,item.id_staff,TABLES.Work.fields.NBR_ADD_HOUR.name)} date={getDate(item.nbr_add_hour)}  title="Nbr H.SUPP"  mode="time"style={styles.inputDate} ></SuiviInputDate>
                              </View>
-                             <Text style={{color:"black"}}>6h30</Text>
+                             <Text style={{color:"black"}}>5h30</Text>
                         </View>
                     )
                 }}
@@ -87,6 +95,12 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: '#ccc',
       },
+      inputDate:{
+        borderColor:"#cacaca",
+        backgroundColor:"transparent",
+        borderWidth:0.3,
+        titleColor:"#aeaeca"
+    },
       dropdownContainer: {
         margin: 20,
         marginBottom:0
@@ -129,13 +143,10 @@ const styles = StyleSheet.create({
         fontSize:15,
     },
     listItem:{
-        flex:1,
+    flex:1,
      flexDirection:'row',
-      marginLeft:3,
-      marginBottom:10,
+     padding:10,
      alignItems: 'center',
-     borderBottomWidth:1,
-     borderBottomColor:"#4a545a"
     },
     listItemImage:{
         width:'98%',

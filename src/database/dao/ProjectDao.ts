@@ -1,6 +1,8 @@
 import Database, { ProjectRepository } from "..";
+import { TABLES } from "./constants";
 
 export interface Project{
+    id:number,
     title:string,
     description:string,
     debut_reel:Date,
@@ -48,9 +50,9 @@ export default class ProjectDao {
                .then((resultSet)=>{
                    const projects:Array<Project>=[];
                    for(let i=0 ; i<resultSet.length ; i++){
-                       const  {title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
+                       const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
                        projects.push({ 
-                           title,description,debut_estime,debut_reel,fin_estime,fin_reel
+                           id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
                        })
                    }
                    resolve(projects);
@@ -65,9 +67,9 @@ export default class ProjectDao {
            .then((resultSet)=>{
                const projects:Array<Project>=[];
                for(let i=0 ; i<resultSet.length ; i++){
-                   const  {title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
+                   const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
                    projects.push({ 
-                       title,description,debut_estime,debut_reel,fin_estime,fin_reel
+                       id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
                    })
                }
                resolve(projects);
@@ -77,31 +79,48 @@ export default class ProjectDao {
    });
 }
    getByCategorie(id_categorie:string):Promise<Array<Project>>{
-    return new Promise((resolve, reject) => {
-           this.database.selectFromTable(this.TABLE_NAME,[],{id_categorie:id_categorie})
-           .then((resultSet)=>{
-               const projects:Array<Project>=[];
-               for(let i=0 ; i<resultSet.length ; i++){
-                   const  {title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                   projects.push({ 
-                       title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                   })
-               }
-               resolve(projects);
-           }).catch(error=>{
-               reject(error);
-           });
-   });
-}
+        return new Promise((resolve, reject) => {
+            this.database.selectFromTable(this.TABLE_NAME,[],{id_categorie:id_categorie})
+            .then((resultSet)=>{
+                const projects:Array<Project>=[];
+                for(let i=0 ; i<resultSet.length ; i++){
+                    const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
+                    projects.push({ 
+                        id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
+                    })
+                }
+                resolve(projects);
+            }).catch(error=>{
+                reject(error);
+            });
+    });
+    }
+    getStaffActivity(id_project:string){
+        return new Promise((resolve, reject) => {
+            this.database.selectFromTable(TABLES.Work.name,[],{})
+            .then((resultSet)=>{
+                const projects:Array<Project>=[];
+                for(let i=0 ; i<resultSet.length ; i++){
+                    const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
+                    projects.push({ 
+                        id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
+                    })
+                }
+                resolve(projects);
+            }).catch(error=>{
+                reject(error);
+            });
+    });
+    }
      getAll():Promise<Array<Project>>{
          return new Promise((resolve, reject) => {
                 this.database.selectFromTable(this.TABLE_NAME,[],{})
                 .then((resultSet)=>{
                     const projects:Array<Project>=[];
                     for(let i=0 ; i<resultSet.length ; i++){
-                        const  {title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
+                        const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
                         projects.push({ 
-                            title,description,debut_estime,debut_reel,fin_estime,fin_reel
+                           id, title,description,debut_estime,debut_reel,fin_estime,fin_reel
                         })
                     }
                     resolve(projects);

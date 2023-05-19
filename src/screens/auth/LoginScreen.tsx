@@ -36,8 +36,8 @@ interface LoginState {
         error:'',
         isLoading:false,
         liked:false,
-        username:'',
-        password:''
+        username:'test',
+        password:'text'
     });
 
     const validate = ({username,password}:any)=>{

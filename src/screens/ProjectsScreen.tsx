@@ -1,16 +1,26 @@
 // src/screens/ProjectScreen.js
-import React, {useContext} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import ListProjectsOverViews from './ListProjectsOverViews';
 import {liked} from '../assets';
 import { Project } from '../database/dao/ProjectDao';
-import { ROUTES } from '../constants/routes';
 
 const Tab = createMaterialTopTabNavigator();
 
-export default function ProjectScreen({navigation}:any) {
+export default function ProjectScreen({navigation,route}:any) {
+    const { next } = route.params;
+    const nextRouteRef = useRef(next);
 
+    useEffect(() => {
+        console.log("NEXT" ,next);
+        nextRouteRef.current = next;
+    }, [next]);  // This effect runs whenever 'next' changes
+
+    const onProjectView = (item: Project) => {
+        console.log("GO TO", nextRouteRef.current);
+        navigation.navigate(nextRouteRef.current, { project: item })
+      };
     const pages=[
         {
             title:"section1",
@@ -50,25 +60,28 @@ export default function ProjectScreen({navigation}:any) {
       </View>
       <Tab.Navigator>
         <Tab.Screen name="FTTS" component={ListProjectsOverViews}
+          
           initialParams={{ 
             interact:true,
             pages:pages,
             categorie:"1",
-            onProjectView:(item:Project)=>navigation.navigate(ROUTES.PROJECTINFO,{project:item})
+            onProjectView:onProjectView
           }}
         />
         <Tab.Screen name="B2B" component={ListProjectsOverViews} 
           initialParams={{ 
             interact:true,
             pages:pages,
-            categorie:"2"
+            categorie:"2",
+            onProjectView:onProjectView
           }}
         />
         <Tab.Screen name="FTTH" component={ListProjectsOverViews} 
           initialParams={{ 
             interact:true,
             pages:pages,
-            categorie:"3"
+            categorie:"3",
+            onProjectView:onProjectView
           }}
         />
       </Tab.Navigator>

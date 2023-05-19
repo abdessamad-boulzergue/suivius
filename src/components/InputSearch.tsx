@@ -1,19 +1,19 @@
 
 import {useState} from 'react'
-import { View,Image,TextInput,StyleSheet } from "react-native";
+import { View,TextInput,StyleSheet } from "react-native";
 import { Button } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
-const InputSearch=({value,placeholder,style}:any)=>{
+const InputSearch=({value,placeholder}:any)=>{
     
-    const [innerStyle,setInnerStyle] = useState(style || styles)
+    const [innerStyle,setInnerStyle] = useState(styles)
     return(
-        <View style={innerStyle?.SectionStyle}>
+        <View style={innerStyle?.container}>
             <TextInput
                 style={innerStyle?.input}
                 placeholder={placeholder}
                 value = {value}
             />
-            <Button style={innerStyle.searchBtn} leftIcon={ <Icon size={20} name="search"/> }> </Button>
+           <Icon size={20} name="search"/> 
         </View>
     )
 
@@ -23,27 +23,18 @@ export default InputSearch;
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex:1,
-        marginTop:'40%',
-        alignItems:'center',
-        height:45
-    },
     searchBtn:{
         borderRadius:10,
+        color:"#fff",
         width:55,
         height:45
-    },
-    shadow: {
-        flex: 1,
-        width: undefined,
-        height: undefined,
     },
 
     input: {
         flex: 1,
-        color:'black',
-        height:45
+        height:45,
+        color:"#000"
+
     },
     ImageStyle: {
         padding: 10,
@@ -53,19 +44,10 @@ const styles = StyleSheet.create({
         resizeMode: 'stretch',
         alignItems: 'center',
     },
-    button: {
-        width: 180
-    },
-    error: {
-        color: 'red',
-        marginBottom: 20,
-    },
-    SectionStyle: {
+    container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
         borderWidth: 0.5,
-        borderColor: '#000',
         height: 45,
         borderRadius: 15,
         margin: 15,

@@ -1,42 +1,55 @@
-import React, {Component} from 'react';
+import React, {Component, useEffect} from 'react';
 import {
     Text,  StyleSheet,  SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,TouchableOpacity
 } from 'react-native';
 import { useState } from 'react';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import SuiviInputText from '../components/InputText';
 import SuiviInputDate from '../components/InputDate';
-
+import { useDao } from '../stores/daoStores';
+import { Autorisation } from '../database/dao/AutorisationDao';
+import { runInAction } from 'mobx';
+import { TABLES } from '../database/dao/constants';
+import { Project } from '../database/dao/ProjectDao';
+import { format } from 'date-fns';
 interface AutorizationState {
-  }
+
+}
 
 const AutorizationScreen = ({route,navigation}:any) => {
-    let callbackDateChange:any;
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [dateDemande, setDateDemande] = useState(new Date());
-    const [dateCommission, setDateCommission] = useState(new Date());
-    const [showPicker, setShowPicker] = useState(false);
-
-    const handleDateChange = (event:any, date:any) => {
-        if (date !== undefined) {
-        callbackDateChange(date);
-        }
-        setShowPicker(false);
-    };
-
-    const showDatePicker = (date:Date , callback :any) => {
-        setSelectedDate(date);
-        setShowPicker(true);
-        callbackDateChange = callback
-    };
+    const project:Project = route.params?.project;
+    const [dateDemande, setDateDemande] = useState<Date|undefined>(undefined);
+    const [dateCommission, setDateCommission] = useState<Date|undefined>(undefined);
+    const [dateDecision, setDateDecision] = useState<Date|undefined>(undefined);
+    const [datePayement, setDatePayment] = useState<Date|undefined>(undefined);
+    const [dateSignature, setDateSignature] = useState<Date|undefined>(undefined);
+    const {autorisationDao} = useDao();
+    const onDateChange =(date:Date,key:string)=>{
+    
+        const fields :{[key:string]:any} ={};
+        fields[key]=format(date,"yyyy-MM-dd");
+        autorisationDao.updateDate(project.id,fields)
+    }
+    useEffect(()=>{
+        autorisationDao.getByIdProject(project.id).then((autorisations:Array<Autorisation>)=>{
+            autorisations.slice(0,1).forEach(autoriz=>{
+                console.log(autoriz)
+                runInAction(()=>{
+                setDateCommission(autoriz.date_commission);
+                setDateDemande(autoriz.date_demande);
+                setDateDecision(autoriz.date_decision)
+                setDatePayment(autoriz.date_paiment)
+                setDateSignature(autoriz.date_sign)
+                })
+            })
+        })
+    },[])
 
         return (
-            <View style={{flex: 1,}}>
-               <SuiviInputDate></SuiviInputDate>
-               <SuiviInputDate></SuiviInputDate>
-               <SuiviInputDate></SuiviInputDate>
-               <SuiviInputDate></SuiviInputDate>
-               <SuiviInputDate></SuiviInputDate>
+            <View style={{flex: 1,padding:10}}>
+               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateDemande.name) } key={dateDemande} title="Date dépôt de la demande" date={dateDemande} />
+               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateCommission.name) } key={dateCommission}  title="Date de la commission" date={dateCommission}/>
+               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateDecision.name) } key={dateDecision} title="Date dépôt de decision de la commission" date={dateDecision} />
+               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.datePayment.name) } key={datePayement} title="Date de paiment" date={datePayement}/>
+               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateSignature.name) } key={dateSignature} title="Date de signature de l'autorisation " date={dateSignature} />
             </View>
         );
     

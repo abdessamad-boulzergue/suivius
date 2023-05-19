@@ -1,17 +1,23 @@
 
 import { View,Image,TextInput,StyleSheet, TouchableOpacity } from "react-native";
 import { user } from '../assets'
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import SuiviInputText from "./InputText";
+import { format } from 'date-fns';
 
-const SuiviInputDate=({mode}:any)=>{
-
+const SuiviInputDate=({mode, title,date,onChange,style}:any)=>{
+    mode = mode || "date";
+    const inputPattern= mode ==='date'? 'dd/MM/yyyy' :"HH:mm";
     const [showPicker, setShowPicker] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const handleDateChange = (event:any, date:any) => {
-        setShowPicker(false);
-        setSelectedDate(date)
+    const [selectedDate, setSelectedDate] = useState<Date>(date || new Date());
+    const [displayDate, setDisplayDate] = useState<string>(date ? format(date,inputPattern) : "");
+    onChange = onChange ? onChange :()=>{};
+    const handleDateChange = (event:any, newDate:any) => {
+            setShowPicker(false);
+            setSelectedDate(newDate)
+            setDisplayDate(format(newDate,inputPattern) )
+            onChange(newDate)
     };
 
     const showDatePicker = () => {
@@ -19,10 +25,10 @@ const SuiviInputDate=({mode}:any)=>{
     };
 
     return(
-        <View style={styles.container}>
+        <View>
             <TouchableOpacity onPress={()=>showDatePicker()}>
-                     <SuiviInputText value ={selectedDate ?selectedDate : ''} ></SuiviInputText>
-                </TouchableOpacity>
+                     <SuiviInputText editable={false} style={style} key={displayDate} title={title} icon="calendar" value ={displayDate} ></SuiviInputText>
+          </TouchableOpacity>
                 {showPicker && (
                     <DateTimePicker
                     value={selectedDate}
@@ -39,8 +45,5 @@ export default SuiviInputDate;
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex:1,
-        width:"100%"
-    },
+    
 });

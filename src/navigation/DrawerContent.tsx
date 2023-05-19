@@ -26,7 +26,7 @@ export default function DrawerContent(props:any) {
             <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home" color={color} size={size} />}
                 label="Projet"
-                onPress={() => props.navigation.navigate(ROUTES.PROJECTS)}
+                onPress={() => props.navigation.navigate(ROUTES.PROJECTS,{next:ROUTES.PROJECTINFO})}
             />
              <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
@@ -56,7 +56,7 @@ export default function DrawerContent(props:any) {
              <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
                 label="Reporting"
-                onPress={() => props.navigation.navigate(ROUTES.ACTIVITY_REPORT)}
+                onPress={() => props.navigation.navigate(ROUTES.PROJECTS,{next:ROUTES.ACTIVITY_REPORT})}
             />
 
              <DrawerItem labelStyle={styles.labelStyle} 

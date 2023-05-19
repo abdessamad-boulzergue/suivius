@@ -9,6 +9,7 @@ import { ROUTES } from '../constants/routes';
 import ProjectDao, { Project } from '../database/dao/ProjectDao';
 import DatabaseContext from '../database/DatabaseContext';
 import StepDao, { Step } from '../database/dao/StepDao';
+import { useDao } from '../stores/daoStores';
 
 
 interface ListOverViewState {
@@ -22,8 +23,7 @@ const StaffActivityViews = ({route,navigation}:any) => {
 
     const style = route.params.style || styles ;
     const {interact,categorie} = route.params;
-    const projectRepo = new ProjectDao(useContext(DatabaseContext));
-    const stepRepo = new StepDao(useContext(DatabaseContext));
+    const {projectDao,stepDao} = useDao()
     const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
     const [state, setState] = useState<ListOverViewState>({
         pages:[],
@@ -33,7 +33,7 @@ const StaffActivityViews = ({route,navigation}:any) => {
     });
 
     const  getAllProjects = () => {
-        projectRepo.getByCategorie(categorie).then(
+        projectDao.getByCategorie(categorie).then(
             (projects)=>{
                 setPages([{title:"", data:projects}]);
             }
@@ -41,7 +41,7 @@ const StaffActivityViews = ({route,navigation}:any) => {
     }
 
     const  getAllSteps = () => {
-        stepRepo.getAll()
+        stepDao.getAll()
         .then( steps=>{ setState({...state,steps})});
     }
 
@@ -53,7 +53,7 @@ const StaffActivityViews = ({route,navigation}:any) => {
    const  onStepChange =(item:string)=>{
     setState({...state,selectedOption:item});
     if(item!="-1"){
-        projectRepo.getByStepAndCategorie(item,categorie)
+        projectDao.getByStepAndCategorie(item,categorie)
         .then( data=>{ setPages([{title:"", data:data}])});
     }else{
         getAllProjects();
