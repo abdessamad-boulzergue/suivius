@@ -4,9 +4,9 @@ import {useStores} from '../stores/context';
 import HomeStack from './HomeStack';
 import {ROUTES} from '../constants/routes';
 import AuthStack from './AuthStack';
-import {Center, Spinner, View} from 'native-base';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaView ,View} from 'react-native';
 import {observer} from 'mobx-react-lite';
+import LoadingScreen from '../screens/LoadingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,10 +36,8 @@ const RootStack = observer(() => {
   return (
     <>
       {isLoading ? (
-        <View flex={1}>
-          <Center>
-            <Spinner />
-          </Center>
+        <View>
+          <LoadingScreen></LoadingScreen>
         </View>
       ) : (
         <SafeAreaView style={{flex:1}}>

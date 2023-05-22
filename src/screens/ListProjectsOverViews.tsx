@@ -90,22 +90,20 @@ const ListProjectsOverViews = ({route}:any) => {
                 <SectionList sections={pages}
                  renderItem={({item}) =>{ 
                     return(
-                    <OverViewItem key={key}  style={state.style} item = {item} interact={interact}
-                                    onView ={(vItem:any) => {   state.onProjectView(vItem)  }}
-                                                    />
-                    )}}
-                 renderSectionHeader={({section}) => {
-                                return(section.title?  (<Text style ={styles.sectionTitle}> {section.title} </Text>) : <Text/>)
-                            }}
-                keyExtractor={(item, index) => index.toString()}
-               
-                ItemSeparatorComponent={renderSeparator}
+                            <OverViewItem key={key}  style={state.style} item = {item} interact={interact}
+                                            onView ={(vItem:any) => {   state.onProjectView(vItem)  }}
+                                                            />
+                            )}}
+                        renderSectionHeader={({section}) => {
+                                        return(section.title?  (<Text style ={styles.sectionTitle}> {section.title} </Text>) : <Text/>)
+                                    }}
+                        keyExtractor={(item, index) => index.toString()}
+                    
+                        ItemSeparatorComponent={renderSeparator}
 
-                 />
-            </View>
-        );
-    
-}
+                        />
+                    </View>
+                )}
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
     dropdown: {

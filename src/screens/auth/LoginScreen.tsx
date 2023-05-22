@@ -92,8 +92,12 @@ interface LoginState {
 
     
     return (
-            <LinearGradient colors={['#9cb8b3', '#8c9494']} style={styles.content}>
-               <ScrollView >
+            <LinearGradient 
+            end={{x: 1.0, y: 0.5}}
+            locations={[0, 0.2, 10.0]} // Spread the colors along the gradient
+            colors={['#5C969F','#5C969F', '#29626B']}
+             style={styles.content}>
+               <View >
                    <View style = {styles.container}>
                        <Image style = {{margin:15}}
                            source={imgLogo.imageSource}
@@ -148,7 +152,7 @@ interface LoginState {
                         </View>
                 }
             </View>
-               </ScrollView>
+               </View>
                </LinearGradient>
 
         );

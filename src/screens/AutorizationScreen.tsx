@@ -22,16 +22,23 @@ const AutorizationScreen = ({route,navigation}:any) => {
     const [datePayement, setDatePayment] = useState<Date|undefined>(undefined);
     const [dateSignature, setDateSignature] = useState<Date|undefined>(undefined);
     const {autorisationDao} = useDao();
-    const onDateChange =(date:Date,key:string)=>{
+    const onDateChange =async (date:Date,key:string)=>{
     
         const fields :{[key:string]:any} ={};
         fields[key]=format(date,"yyyy-MM-dd");
-        autorisationDao.updateDate(project.id,fields)
+        const autoriz = await  autorisationDao.getByIdProject(project.id);
+        if(autoriz){
+            autorisationDao.updateDate(project.id,fields)
+        }else{
+            const autoriz :Autorisation = { date_commission:undefined,date_decision:undefined,date_demande:undefined,date_paiment:undefined,date_sign:undefined,id_project:project.id.toString()}
+            autorisationDao.addToPoject(autoriz).then(()=>{
+                autorisationDao.updateDate(project.id,fields)
+            })
+        }
     }
     useEffect(()=>{
-        autorisationDao.getByIdProject(project.id).then((autorisations:Array<Autorisation>)=>{
-            autorisations.slice(0,1).forEach(autoriz=>{
-                console.log(autoriz)
+        autorisationDao.getByIdProject(project.id).then((autoriz:Autorisation |null)=>{
+                if(autoriz){
                 runInAction(()=>{
                 setDateCommission(autoriz.date_commission);
                 setDateDemande(autoriz.date_demande);
@@ -39,7 +46,7 @@ const AutorizationScreen = ({route,navigation}:any) => {
                 setDatePayment(autoriz.date_paiment)
                 setDateSignature(autoriz.date_sign)
                 })
-            })
+                }
         })
     },[])
 

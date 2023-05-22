@@ -3,7 +3,7 @@ import React, {useContext, useEffect, useRef, useState} from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import ListProjectsOverViews from './ListProjectsOverViews';
-import {liked} from '../assets';
+import {inwi} from '../assets';
 import { Project } from '../database/dao/ProjectDao';
 
 const Tab = createMaterialTopTabNavigator();
@@ -28,22 +28,22 @@ export default function ProjectScreen({navigation,route}:any) {
                 {
                     title:"Projet Inwi ",
                     description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
+                    avatar_url:inwi.imageSource,
                 },
                 {
                     title:"Projet IAM ",
                     description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
+                    avatar_url:inwi.imageSource,
                 },
                 {
                     title:"Projet Orange ",
                     description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
+                    avatar_url:inwi.imageSource,
                 },
                 {
                     title:"Projet Oncf ",
                     description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
+                    avatar_url:inwi.imageSource,
                 }
             ]
         }

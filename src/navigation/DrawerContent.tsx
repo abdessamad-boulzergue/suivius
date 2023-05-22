@@ -16,6 +16,7 @@ export default function DrawerContent(props:any) {
     return (
         <View style={styles.container}>
       <DrawerContentScrollView {...props} style={[styles.drawerContent]}>
+        <View style={{flex:1,}}>
             {/* Header */}
             <View style={styles.header}>
                 <Image style={styles.logo} source={require('../assets/images/logo_primary.png')} />
@@ -30,44 +31,13 @@ export default function DrawerContent(props:any) {
             />
              <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
-                label="Rapport d'activité"
-                onPress={() => props.navigation.navigate('InfoProject')}
-            />
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="cube" color={color} size={size} />}
-                label="Collborateurs"
-                onPress={() => props.navigation.navigate('Home')}
-            />
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
-                label="Equipements"
-                onPress={() => props.navigation.navigate('Home')}
-            />
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
-                label="Taux d'activité"
-                onPress={() => props.navigation.navigate('Home')}
-            />
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="calendar" color={color} size={size} />}
-                label="Suivie de projets"
-                onPress={() => props.navigation.navigate('Home')}
-            />
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
                 label="Reporting"
                 onPress={() => props.navigation.navigate(ROUTES.PROJECTS,{next:ROUTES.ACTIVITY_REPORT})}
             />
-
-             <DrawerItem labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="home" color={color} size={size} />}
-                label="Notification"
-                onPress={() => props.navigation.navigate('Home')}
-            />
-             <DrawerItem  labelStyle={styles.labelStyle} 
-                icon={({ color, size }) => <Icon name="cog" color={color} size={size} />}
-                label="Paramètre"
-                onPress={() => props.navigation.navigate('Home')}
+            <DrawerItem labelStyle={styles.labelStyle} 
+                icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
+                label="Collaborateur"
+                onPress={() => props.navigation.navigate(ROUTES.StaffMemberScreen)}
             />
               <DrawerItem  labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
@@ -82,7 +52,7 @@ export default function DrawerContent(props:any) {
                 <Text style={styles.userName}>Username</Text>
                 <Text style={styles.userEmail}>user@example.com</Text>
             </View>
-            
+            </View>
         </DrawerContentScrollView>
         </View>
     );
@@ -97,7 +67,8 @@ return  StyleSheet.create({
     drawerContent: {
       flex: 1,
       backgroundColor:theme.colors.background,
-      color:theme.colors.text
+      color:theme.colors.text,
+      margin:10
     },
     labelStyle:{
         color: theme.colors.text, 
@@ -119,7 +90,7 @@ return  StyleSheet.create({
     },
     bottom: {
       alignItems: 'center',
-      paddingBottom:20
+      marginTop:"100%",
     },
     userImage: {
       width: 50,

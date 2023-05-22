@@ -10,6 +10,8 @@ import ProjectScreen from '../screens/ProjectsScreen';
 import { ROUTES } from '../constants/routes';
 import InfoProjectScreen from '../screens/InfoProjectScreen';
 import ActivityReportScreen from '../screens/ActivityReportScreen';
+import TabViewExample from '../screens/Tabed';
+import StaffMemberScreen from '../screens/StaffMemberScreen';
 const Stack = createStackNavigator();
 
 
@@ -65,6 +67,13 @@ const HomeStack = ({ navigation }:any) => {
       component={InfoProjectScreen}
       options={{
         title: 'Project Info'
+      }}
+    />
+    <Stack.Screen
+      name={ROUTES.StaffMemberScreen}
+      component={StaffMemberScreen}
+      options={{
+        title: 'StaffMemberScreen '
       }}
     />
     <Stack.Screen

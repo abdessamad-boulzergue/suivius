@@ -1,5 +1,6 @@
 import  SQLite from "react-native-sqlite-storage";
 import { data_insert,data_table_create } from "./data";
+import { Filter } from "./dao/expression";
 SQLite.DEBUG(true);
 SQLite.enablePromise(true);
 
@@ -90,7 +91,18 @@ export default class Database{
         }
     }
 
-   
+    selectFromTableWithFilter(tableName : string,cols:Array<string>,conditions:{[key: string]: Filter}){
+        let queryColumn = 'tb.*';
+        let where ="";
+        if (cols && cols.length>0)
+            queryColumn = 'tb.'.concat(cols.join(', tb.'));
+        if(conditions && Object.keys(conditions).length>0){
+            where = "WHERE " + Object.keys(conditions)
+            .map(key=> key.concat(" ").concat(conditions[key].value()))
+            .join(" AND ");
+        }
+        return this.executeQuery('SELECT '+queryColumn+' FROM '+tableName+' tb ' + where, []);
+    }
     selectFromTable(tableName : string,cols:Array<string>,conditions:{[key: string]: any}){
         let queryColumn = 'tb.*';
         let where ="";
@@ -131,7 +143,10 @@ export default class Database{
         let queryColumn = Object.keys(fileds)
                     .join(',')
         let values = Object.keys(fileds)
-                    .map((key:string)=>{ return "'".concat(fileds[key]).concat("'") })
+                    .map((key:string)=>{ 
+                        let value = fileds[key] || "";
+                        return "'".concat(value).concat("'")
+                     })
                     .join(',')
 
         return this.executeQuery("INSERT INTO  "+ tableName +'('+ queryColumn +') VALUES('+ values +')', []);

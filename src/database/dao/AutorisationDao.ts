@@ -4,11 +4,11 @@ import { TABLES } from "./constants";
 
 export interface Autorisation{
     id_project:string,
-    date_demande:Date,
-    date_commission:Date,
-    date_decision:Date,
-    date_paiment:Date,
-    date_sign:Date
+    date_demande:Date | undefined,
+    date_commission:Date | undefined,
+    date_decision:Date | undefined,
+    date_paiment:Date | undefined,
+    date_sign:Date |undefined
 }
 
 export default class AutorisationDao {
@@ -20,6 +20,14 @@ export default class AutorisationDao {
        
     }
 
+    async addToPoject(autorisation:Autorisation):Promise<void>{
+        return this.database.insert(this.TABLE_NAME,{...autorisation})
+        .then(result=>{
+            console.log("insert document : ", result);
+        }).catch(err=>{
+            console.error(err);
+        })
+    }
     updateDate(id_project:number , fileds:{}){
         this.database.update(this.TABLE_NAME,fileds,{id_project:id_project})
         .then(result=>{
@@ -28,23 +36,22 @@ export default class AutorisationDao {
             console.error(err);
         })
     }
-    getByIdProject(id_project:number):Promise<Array<Autorisation>>{
+    getByIdProject(id_project:number):Promise<Autorisation|null>{
         return new Promise((resolve, reject) => {
                this.database.selectFromTable(this.TABLE_NAME,[],{id_project:id_project})
                .then((resultSet)=>{
-                   const projects:Array<Autorisation>=[];
-                   for(let i=0 ; i<resultSet.length ; i++){
-                       const  {id_project,date_demande,date_commission,date_decision,date_paiment,date_sign} = resultSet.item(i);
-                       projects.push({
+                   if(resultSet.length >0){
+                       const  {id_project,date_demande,date_commission,date_decision,date_paiment,date_sign} = resultSet.item(0);
+                       resolve ({
                         id_project,
-                        date_demande:parse(date_demande, this.formatDateString, new Date()),
-                        date_commission:parse(date_commission, this.formatDateString, new Date()),
-                        date_decision:parse(date_decision, this.formatDateString, new Date()),
-                        date_paiment:parse(date_paiment, this.formatDateString, new Date()),
-                        date_sign:parse(date_sign, this.formatDateString, new Date()),
+                        date_demande:date_demande ?parse(date_demande, this.formatDateString, new Date()) :undefined,
+                        date_commission:date_commission ? parse(date_commission, this.formatDateString, new Date()):undefined,
+                        date_decision:date_decision? parse(date_decision, this.formatDateString, new Date()):undefined,
+                        date_paiment:date_paiment? parse(date_paiment, this.formatDateString, new Date()):undefined,
+                        date_sign:date_sign ?parse(date_sign, this.formatDateString, new Date()):undefined,
                        })
                    }
-                   resolve(projects);
+                   resolve(null);
                }).catch(error=>{
                    reject(error);
                });

@@ -11,6 +11,9 @@ export const imageSignIn1Bg: ImageSource = {
 export const imgLogo: ImageSource = {
     imageSource: require('./images/logo_primary.png'),
 };
+export const inwi: ImageSource = {
+    imageSource: require('./images/inwi.png'),
+};
 
 export const shield: ImageSource = {
     imageSource: require('./images/shield.png'),

@@ -13,6 +13,7 @@ import WorkToolsUsageDao, { WorkToolsUsage } from '../database/dao/WorkToolsUsag
 import ArticleDao from '../database/dao/ArticleDao';
 import WorkToolsDao from '../database/dao/WorkToolsDao';
 import DocumentDao from '../database/dao/DocumentDao';
+import StaffDao from '../database/dao/StaffDao';
 
 
 export class RootDaoStore {
@@ -27,13 +28,14 @@ export class RootDaoStore {
     articleDao : ArticleDao
     workToolsDao : WorkToolsDao
     documentDao:DocumentDao
-
+    staffDao: StaffDao
   constructor(private database :Database) {
     this.projectDao = new ProjectDao(database);
     this.autorisationDao = new AutorisationDao(database);
     this.stepDao = new StepDao(database);
     this.localisationDao = new LocalisationDao(database);
-    this.workDao = new WorkDao(database);
+    this.staffDao = new StaffDao(database)
+    this.workDao = new WorkDao(database,this.staffDao);
     this.workToolsDao = new WorkToolsDao(database);
     this.workToolsUsageDao = new WorkToolsUsageDao(database,this.workToolsDao);
     this.articleDao = new ArticleDao(database);

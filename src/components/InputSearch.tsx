@@ -3,17 +3,21 @@ import {useState} from 'react'
 import { View,TextInput,StyleSheet } from "react-native";
 import { Button } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
-const InputSearch=({value,placeholder}:any)=>{
+const InputSearch=({value,placeholder,onSearch}:any)=>{
     
+    onSearch = onSearch || (()=>{});
     const [innerStyle,setInnerStyle] = useState(styles)
+    const [textValue,setTextValue] = useState(value || "");
+
     return(
         <View style={innerStyle?.container}>
             <TextInput
                 style={innerStyle?.input}
+                onChangeText={(text:string)=>setTextValue(text)}
                 placeholder={placeholder}
-                value = {value}
+                value = {textValue}
             />
-           <Icon size={20} name="search"/> 
+          <Button onPress={()=>onSearch(textValue)}> <Icon size={20} name="search"/> </Button>
         </View>
     )
 

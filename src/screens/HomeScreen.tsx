@@ -11,6 +11,7 @@ import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, V
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import {Colors, DebugInstructions, Header, LearnMoreLinks, ReloadInstructions,} from 'react-native/Libraries/NewAppScreen';
+import ChartScreen from './ChartScreen';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -62,11 +63,13 @@ function HomeScreen(): JSX.Element {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <Header />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
           }}>
+        <Section title=''>
+        <ChartScreen></ChartScreen>
+        </Section>
           <Section title="Step One">
             Edit <Text style={styles.highlight}>App.tsx</Text> to change this
             screen and then come back to see your edits.

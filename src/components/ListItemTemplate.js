@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {   View, StyleSheet,Dimensions,
          TouchableOpacity,
 } from 'react-native';
-export default  OverViewItem= ({Left , Center, Right,onView})=>{
+export default  ListItemTemplate= ({Left , Center, Right,onView})=>{
 
         const {style} =  this.state;
         return(

@@ -23,8 +23,7 @@ type DestinationScreenRouteProp = RouteProp<RootStackParamList, 'InfoProjectScre
 type Props = {
   route: DestinationScreenRouteProp;
 };
-
-const  InfoProjectScreen =({ route }:Props)=>{
+export default function InfoProjectScreen({route}:any) {
 
     const{localisationDao} = useDao();
     const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
@@ -95,4 +94,3 @@ const styles = StyleSheet.create({
         color:"black"
     }
 })
-export default InfoProjectScreen

@@ -1,8 +1,7 @@
 import React, {useState} from 'react';
-import {  Text, View, Image,StyleSheet,Dimensions,
+import {  Text, View,StyleSheet,Dimensions,
          TouchableOpacity,
 } from 'react-native';
-import {recommended ,liked,loved,heart} from  '../assets';
 import Collapsible from 'react-native-collapsible';
 import Icon from 'react-native-vector-icons/Ionicons';
 

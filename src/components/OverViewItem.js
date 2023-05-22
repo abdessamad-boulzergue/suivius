@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {  Text, View, Image,StyleSheet,Dimensions,
          TouchableOpacity,
 } from 'react-native';
-import {recommended ,liked,loved,heart} from  '../assets';;
+import {recommended ,inwi} from  '../assets';;
 export default class OverViewItem extends Component{
 
     constructor(props){
@@ -25,7 +25,7 @@ export default class OverViewItem extends Component{
             <TouchableOpacity onPress={()=>onView(item)}>
             <View style ={style.listItem}>
     
-            <Image source={loved.imageSource }
+            <Image source={inwi.imageSource }
                        style={style.listItemImage}
                 />
                 {  item.title != '' &&
@@ -39,7 +39,7 @@ export default class OverViewItem extends Component{
                 {this.props.interact &&
                    
                         <TouchableOpacity onPress={()=> this.setState({liked:!this.state.liked})}>
-                            <Image source={this.state.liked? liked.imageSource:recommended.imageSource} style={styles.interactInput}/>
+                            <Image source={this.state.liked? recommended.imageSource:recommended.imageSource} style={styles.interactInput}/>
                         </TouchableOpacity>
                     
                 }

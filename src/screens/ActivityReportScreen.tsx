@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import ListOverViews from './ListProjectsOverViews';
-import {liked} from '../assets';
+import {inwi} from '../assets';
 import StaffActivity from './StaffActivityComponent';
 import ToolsActivityComponent from './ToolsActivityComponent';
 import {ModalExample} from './Modal';
@@ -15,34 +15,6 @@ const Tab = createMaterialTopTabNavigator();
 export default function ActivityReportScreen({route}:any) {
 
     const project = route.params?.project;
-
-    const pages=[
-        {
-            title:"section1",
-            data:[
-                {
-                    title:"Projet Inwi ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
-                },
-                {
-                    title:"Projet IAM ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
-                },
-                {
-                    title:"Projet Orange ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
-                },
-                {
-                    title:"Projet Oncf ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:liked.imageSource,
-                }
-            ]
-        }
-     ]
 
   return (
     <View style={styles.container}>
