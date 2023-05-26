@@ -11,6 +11,7 @@ import ArticleConsumeComponent from './ArticleConsumeComponent';
 import ImageGrid from './ImageGridComponent';
 import TSSComponent from './TSSComponent';
 import TravauxComponent from './TravauxComponent';
+import DocumentSelectorDisplay from './DocumentPicker';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -39,7 +40,7 @@ export default function EtudeReportScreen({route}:any) {
             project:project
           }}
         />
-        <Tab.Screen name="Croquis" component={ArticleConsumeComponent} 
+        <Tab.Screen name="Croquis" component={DocumentSelectorDisplay} 
           initialParams={{ 
             project:project
           }}
