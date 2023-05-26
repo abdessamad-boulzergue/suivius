@@ -1,4 +1,5 @@
-import {ImageSource} from './type';
+import {ImageSource, RemoteImage} from './type';
+import { ImageURISource } from 'react-native/Libraries/Image/ImageSource';
 export const logo: ImageSource = {
     imageSource: require('./images/logo_primary.png')
 };
@@ -8,12 +9,17 @@ export const drawerOpen: ImageSource = {
 export const imageSignIn1Bg: ImageSource = {
     imageSource: require('./images/image-background-auth.jpg'),
 };
+
+export const repeat: ImageSource = {
+    imageSource: require('./images/repeat.png'),
+};
 export const imgLogo: ImageSource = {
     imageSource: require('./images/logo_primary.png'),
 };
 export const inwi: ImageSource = {
     imageSource: require('./images/inwi.png'),
 };
+
 
 export const shield: ImageSource = {
     imageSource: require('./images/shield.png'),
@@ -32,6 +38,10 @@ export const toggle_on: ImageSource = {
 export const liked: ImageSource = {
     imageSource: require('./images/liked.png'),
 };
+export const Rliked: ImageURISource= {
+    uri:'./images/liked.png'
+}
+
 export const heart: ImageSource = {
     imageSource: require('./images/heart.png'),
 };

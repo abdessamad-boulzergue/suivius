@@ -14,7 +14,6 @@ const SuiviInputText=({value,placeholder,title,icon,style,editable,keyboardType 
     const [textValue,setTextValue] = useState("");
     useEffect(()=>{
         if(value){
-            console.log(title," ", value)
             setTextValue(value)
         }
         if(style){
@@ -22,7 +21,7 @@ const SuiviInputText=({value,placeholder,title,icon,style,editable,keyboardType 
                 color:style.color || styles.input.color
             })
             setTitleStyle({...titleStyle,
-                color:style.titleColor || styles.title.color
+                color:style.color || styles.title.color
             })
             setContainerStyle({...containerStyle,
                 borderWidth:isNaN(style.borderWidth)? styles.container.borderWidth :style.borderWidth,
@@ -78,11 +77,11 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#fff',
-        borderWidth: 0.5,
-        borderColor: '#000',
-        height: 30,
-        borderRadius: 15,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#C8CDD0',
+        height: 37,
+        borderRadius: 3,
         margin:5
     },
 });

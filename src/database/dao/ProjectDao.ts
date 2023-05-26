@@ -8,16 +8,57 @@ export interface Project{
     debut_reel:Date,
     fin_reel:Date,
     debut_estime:Date,
-    fin_estime:Date
+    fin_estime:Date,
+    id_step:number
+    id_categorie:number
+    id_step_status:number
 }
-
+const stepStatusFLow : {[key:string]:any}={
+    "1":{previous:()=>null,next:()=>2 ,step:2},
+    "2":{ previous:()=>1, next:()=>3,step:2},
+    "3":{ previous:(get:()=>{})=>get(), next:(get:()=>{})=>get(),step:2}
+}
 export default class ProjectDao {
     private  TABLE_NAME = 'PROJECT'
 
     constructor(private database :Database){}
 
-    findById(id:string){
-       
+    findById(id:number):Promise<Project|null>{
+        return new Promise((resolve, reject) => {
+               this.database.selectFromTable(this.TABLE_NAME,[],{id:id})
+               .then((resultSet)=>{
+                   if(resultSet.length>0 ){
+                        resolve(resultSet.item(0));
+                   }
+                   resolve(null);
+               }).catch(error=>{
+                   reject(error);
+               });
+       });
+   }
+  nextStep(id:number):Promise<Project>{
+        return new Promise(async (resolve, reject) => {
+            const project= await this.findById(id);
+            if(project){
+                if(project.id_step_status!==3){
+                const nextStepStatus= stepStatusFLow[project.id_step_status].next();
+                const step_id = stepStatusFLow[nextStepStatus].step;
+
+                project.id_step = step_id
+                project.id_step_status=nextStepStatus
+                this.database.update(this.TABLE_NAME,{
+                        id_step:project.id_step,
+                        id_step_status:project.id_step_status
+                    },{
+                        id:project.id
+                    }).then(result=>{
+                        resolve(project)
+                    }).catch(error=>{
+                        reject(error)
+                    })
+                }
+            }
+        })
     }
     projectDao(){
         return {
@@ -50,10 +91,7 @@ export default class ProjectDao {
                .then((resultSet)=>{
                    const projects:Array<Project>=[];
                    for(let i=0 ; i<resultSet.length ; i++){
-                       const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                       projects.push({ 
-                           id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                       })
+                       projects.push(resultSet.item(i))
                    }
                    resolve(projects);
                }).catch(error=>{
@@ -67,10 +105,7 @@ export default class ProjectDao {
            .then((resultSet)=>{
                const projects:Array<Project>=[];
                for(let i=0 ; i<resultSet.length ; i++){
-                   const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                   projects.push({ 
-                       id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                   })
+                   projects.push(resultSet.item(i))
                }
                resolve(projects);
            }).catch(error=>{
@@ -84,10 +119,7 @@ export default class ProjectDao {
             .then((resultSet)=>{
                 const projects:Array<Project>=[];
                 for(let i=0 ; i<resultSet.length ; i++){
-                    const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                    projects.push({ 
-                        id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                    })
+                    projects.push(resultSet.item(i))
                 }
                 resolve(projects);
             }).catch(error=>{
@@ -101,10 +133,7 @@ export default class ProjectDao {
             .then((resultSet)=>{
                 const projects:Array<Project>=[];
                 for(let i=0 ; i<resultSet.length ; i++){
-                    const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                    projects.push({ 
-                        id,title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                    })
+                    projects.push(resultSet.item(i))
                 }
                 resolve(projects);
             }).catch(error=>{
@@ -118,10 +147,7 @@ export default class ProjectDao {
                 .then((resultSet)=>{
                     const projects:Array<Project>=[];
                     for(let i=0 ; i<resultSet.length ; i++){
-                        const  {id,title,description,debut_estime,debut_reel,fin_estime,fin_reel} = resultSet.item(i);
-                        projects.push({ 
-                           id, title,description,debut_estime,debut_reel,fin_estime,fin_reel
-                        })
+                        projects.push(resultSet.item(i))
                     }
                     resolve(projects);
                 }).catch(error=>{

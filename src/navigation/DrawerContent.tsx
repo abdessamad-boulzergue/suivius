@@ -62,7 +62,7 @@ function createStyles(theme : any){
 return  StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor:'#8c9494'
+      backgroundColor:'#326972'
     },
     drawerContent: {
       flex: 1,

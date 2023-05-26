@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS PROJECT (
     fin_reel DATE NOT NULL,
     id_client INTEGER NOT NULL,id_assign INTEGER NOT NULL,
     id_step INTEGER NOT NULL,
-    id_categorie INTEGER NOT NULL
+    id_categorie INTEGER NOT NULL,
+    id_step_status INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS LOCALISATION(id_project INTEGER UNIQUE NOT NULL,site VARCHAR(100) , region VARCHAR(100),province VARCHAR(100),addresse VARCHAR(100),type_prestation VARCHAR(100));
 CREATE TABLE IF NOT EXISTS AUTORISATION (id_project INTEGER UNIQUE NOT NULL, date_demande DATE, date_commission DATE, date_decision DATE, date_paiment DATE,date_sign DATE);
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS  ArticleConsume (id_article INTEGER  NOT NULL ,id_pro
 CREATE TABLE IF NOT EXISTS WorkTools (id INTEGER UNIQUE NOT NULL ,title VARCHAR(50) NOT NULL);
 CREATE TABLE IF NOT EXISTS  WorkToolsUsage (id_tool INTEGER  NOT NULL ,id_project INTEGER NOT NULL, nbr_hour VARCHAR(10));
 CREATE TABLE IF NOT EXISTS  Document (id INTEGER  NOT NULL ,id_project INTEGER NOT NULL, path VARCHAR(100), data VARCHAR);
+CREATE TABLE IF NOT EXISTS  StepStatus(id INTEGER  NOT NULL ,id_step INTEGER  NOT NULL,title VARCHAR(50));
 `
 
 export const data_insert=  `
@@ -44,16 +46,25 @@ INSERT INTO  STEP           VALUES("1","Travaux")
 INSERT INTO  STEP           VALUES("2","Etude")
 INSERT INTO  STEP           VALUES("3","Autorisation")
 
+INSERT INTO  StepStatus     VALUES("1","2","initialisation")
+INSERT INTO  StepStatus     VALUES("2","2","demarage")
+INSERT INTO  StepStatus     VALUES("3","2","attent validation")
+INSERT INTO  StepStatus     VALUES("4","2","validation TSS")
+INSERT INTO  StepStatus     VALUES("5","2","realisation POQ")
+INSERT INTO  StepStatus     VALUES("6","2","validation POQ")
+INSERT INTO  StepStatus     VALUES("7","2","blockage")
+
+
 INSERT INTO  CATEGORIE      VALUES("1","FTTS")
 INSERT INTO  CATEGORIE      VALUES("2","B2B")
 INSERT INTO  CATEGORIE      VALUES("3","FTTH")
 
-INSERT INTO  PROJECT        VALUES("1","project inwi travaux", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1")
-INSERT INTO  PROJECT        VALUES("2","project inwi Etude", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","2","2")
-INSERT INTO  PROJECT        VALUES("3","project inwi Autorization", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","3","3")
-INSERT INTO  PROJECT        VALUES("4","project 2 inwi  ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1")
-INSERT INTO  PROJECT        VALUES("5","project 3 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1")
-INSERT INTO  PROJECT        VALUES("6","project 4 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1")
+INSERT INTO  PROJECT        VALUES("1","project inwi travaux", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
+INSERT INTO  PROJECT        VALUES("2","project inwi Etude", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","2","2","1")
+INSERT INTO  PROJECT        VALUES("3","project inwi Autorization", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","3","3","1")
+INSERT INTO  PROJECT        VALUES("4","project 2 inwi  ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
+INSERT INTO  PROJECT        VALUES("5","project 3 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
+INSERT INTO  PROJECT        VALUES("6","project 4 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
 
 INSERT INTO  LOCALISATION   VALUES("1","INWI","Rabat-Salé","---","---","propre")
 INSERT INTO  AUTORISATION   VALUES("1","2012-10-10","2012-10-12","2012-10-19","2012-1-10","2012-11-10")

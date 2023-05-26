@@ -10,8 +10,10 @@ import ProjectScreen from '../screens/ProjectsScreen';
 import { ROUTES } from '../constants/routes';
 import InfoProjectScreen from '../screens/InfoProjectScreen';
 import ActivityReportScreen from '../screens/ActivityReportScreen';
-import TabViewExample from '../screens/Tabed';
 import StaffMemberScreen from '../screens/StaffMemberScreen';
+import LocalisationProjectScreen from '../screens/LocalisationProjectScreen';
+import EtudeReportScreen from '../screens/EtudeReportScreen';
+
 const Stack = createStackNavigator();
 
 
@@ -30,7 +32,13 @@ function HomeDrawer() {
 
 const HomeStack = ({ navigation }:any) => {
   return (
-    <Stack.Navigator   initialRouteName="Home">
+    <Stack.Navigator   initialRouteName={ROUTES.PROJECTS}
+    screenOptions={{
+        headerStyle: { backgroundColor: '#326972' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' },
+      }}
+    >
 
     <Stack.Screen
       name={ROUTES.HOME}
@@ -40,7 +48,7 @@ const HomeStack = ({ navigation }:any) => {
         headerLeft: () => (
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
             <Image  source={drawerOpen.imageSource}
-                                style={{ width: 30, height: 30, marginLeft: 10, marginTop:'10%' }}
+                                style={{width: 30, height: 30, marginLeft: 10, marginTop:'10%' }}
                         />
           </TouchableOpacity>
         ),
@@ -50,6 +58,7 @@ const HomeStack = ({ navigation }:any) => {
 <Stack.Screen
       name={ROUTES.PROJECTS}
       component={ProjectScreen}
+      initialParams={{next:ROUTES.PROJECTINFO}}
       options={{
         title: 'Home',
         headerLeft: () => (
@@ -63,10 +72,24 @@ const HomeStack = ({ navigation }:any) => {
     />
 
 <Stack.Screen
+      name={ROUTES.PROJECT_LOCALISATION}
+      component={LocalisationProjectScreen}
+      options={{
+        title: 'Localisation de projet'
+      }}
+    />
+<Stack.Screen
       name={ROUTES.PROJECTINFO}
       component={InfoProjectScreen}
       options={{
         title: 'Project Info'
+      }}
+    />
+    <Stack.Screen
+      name={ROUTES.ETUDE_REPORT_SCREEN}
+      component={EtudeReportScreen}
+      options={{
+        title: 'Rapport d\'etude'
       }}
     />
     <Stack.Screen

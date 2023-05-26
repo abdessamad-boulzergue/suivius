@@ -4,7 +4,7 @@ export const themes = {
       colors: {
         primary: '#6200EE',
         secondary: '#03DAC6',
-        background: '#8c9494',
+        background: '#326972',
         text: '#000000',
       },
     },
@@ -12,7 +12,7 @@ export const themes = {
       colors: {
         primary: '#BB86FC',
         secondary: '#03DAC6',
-        background: '#8c9494',
+        background: '#326972',
         text: '#FFFFFF',
       },
     },

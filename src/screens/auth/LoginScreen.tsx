@@ -17,6 +17,7 @@ import  AsyncStorage from '@react-native-async-storage/async-storage';
 import { ROUTES } from '../../constants/routes';
 import { useStores } from '../../stores/context';
 import {useEffect, useState} from 'react';
+import LoginButton from '../../components/common/LoginButton';
 const window = Dimensions.get('window')
 
 interface LoginState {
@@ -99,15 +100,18 @@ interface LoginState {
              style={styles.content}>
                <View >
                    <View style = {styles.container}>
-                       <Image style = {{margin:15}}
+                       <Image style = {{margin:0}}
                            source={imgLogo.imageSource}
                        />
+
+                       <View style={{width:'80%',marginBottom:25,marginTop:65}}>
+                            <Text>Entrez vos coordonnées pour vous connecter à votre compte</Text>
+                       </View>
                 <View style={styles.SectionStyle}>
                     <Image
                         source={user.imageSource} //Change your icon image here
                         style={styles.ImageStyle}
                     />
-                    <Image style={styles.ImageStyle} source={imgLogo.imageSource} />
 
                     <TextInput
                         style={styles.input}
@@ -129,27 +133,15 @@ interface LoginState {
                         onChangeText={(value)=>{  setState({ ...state,password : value}); }}
                     />
                 </View>
-                       <View style={{ marginTop:5,marginRight:15, flexDirection: 'row',alignSelf:'flex-end'}}>
-                           <Text style={{ marginRight:15,}}> {("REMEMBER_USER_NAME")} </Text>
-                           <TouchableOpacity onPress={()=> {
-                           AsyncStorage.setItem('REMEMBER',(!state.liked).toString())
-                            setState({ ...state,liked:!state.liked})
-                           }}>
-                               <Image source={state.liked? toggle_on.imageSource:toggle_off.imageSource} />
-                           </TouchableOpacity>
-                       </View>
+                     
                 {state.error && (
                     <TextInput style={{color:'red'}}> {state.error }</TextInput>
                 )}
                 {state.isLoading ? (
                     <ActivityIndicator size="small" color="#000000"/>
                 ):
-                    <View style={styles.loginBtn}>
-                < Button
-                    onPress={() => onPressLogin()}
-                    title="Login"
-                    />
-                        </View>
+                 <LoginButton style={{margin:15}} onPress={ ()=>onPressLogin() } title='Connexion'>
+                 </LoginButton>
                 }
             </View>
                </View>
@@ -162,12 +154,13 @@ interface LoginState {
 const styles = StyleSheet.create({
     container: {
         flex:1,
-        marginTop:'40%',
+        marginTop:'35%',
         alignItems:'center'
     },
     loginBtn:{
         width:200,
-        margin:30
+        margin:30,
+        backgroundColor:"#29626B"
     },
     content: {
         flex: 1,
@@ -185,7 +178,8 @@ const styles = StyleSheet.create({
 
     input: {
         flex: 1,
-        color:'black'
+        color:'black',
+        marginLeft:10
     },
     button: {
         width: 180
@@ -201,9 +195,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderWidth: 0.5,
         borderColor: '#000',
-        height: 40,
+        height: 45,
         width:'100%',
-        borderRadius: 15,
+        borderRadius: 20,
         margin: 15,
     },
     ImageStyle: {

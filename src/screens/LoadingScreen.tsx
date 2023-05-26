@@ -1,7 +1,8 @@
-import { StyleSheet ,Animated,View} from "react-native";
+import { StyleSheet ,Animated,View, Image} from "react-native";
 import {Center} from 'native-base';
 import { useEffect, useState } from "react";
 import { position } from "native-base/lib/typescript/theme/styled-system";
+import { imgLogo } from "../assets";
 
 
 export default function LoadingScreen(){
@@ -28,12 +29,16 @@ export default function LoadingScreen(){
 
     return(
         <View style={styles.container}>
+            <Image style = {{margin:0,alignSelf:'center', marginTop:'35%',}}
+                           source={imgLogo.imageSource}
+                       />
             <View style={styles.spiner}>
                     <Animated.View style={{ transform: [{rotate: rotateData}] }}>
                         <View style={styles.dot1} />
                         <View style={styles.dot2} />
                         <View style={styles.dot3} />
                         <View style={styles.dot4} />
+                        <View style={styles.dot5} />
                     </Animated.View>
           </View>
         </View>
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
         height: 7.68,
         borderRadius: 5,
         backgroundColor: 'white',
-        top: -20,
+        top: -19,
       },
       dot2: {
         position: 'absolute',
@@ -68,25 +73,34 @@ const styles = StyleSheet.create({
         height: 7,
         borderRadius: 5,
         backgroundColor: 'white',
-        top: -18,
-        left:-18,
+        top: -16,
+        left:-15,
       },
       dot3: {
         position: 'absolute',
-        width: 7,
-        height: 7,
+        width: 6.4,
+        height: 6.4,
         borderRadius: 5,
         backgroundColor: 'white',
-        top: -0,
-        left:-25,
+        top: -5,
+        left:-23,
       },
       dot4: {
         position: 'absolute',
-        width: 7,
-        height: 7,
+        width: 5.7,
+        height: 5.7,
         borderRadius: 5,
         backgroundColor: 'white',
-        top: 18,
-        left:-18,
+        top: 8,
+        left:-22,
+      },
+      dot5: {
+        position: 'absolute',
+        width: 5.1,
+        height: 5.1,
+        borderRadius: 5,
+        backgroundColor: 'white',
+        top: 17,
+        left:-13,
       },
 });

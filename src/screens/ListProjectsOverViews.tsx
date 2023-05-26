@@ -5,30 +5,26 @@ import {
 import OverViewItem from '../components/OverViewItem';
 import { Picker } from '@react-native-picker/picker';
 import {useEffect, useState} from 'react';
-import { ROUTES } from '../constants/routes';
-import ProjectDao, { Project } from '../database/dao/ProjectDao';
-import DatabaseContext from '../database/DatabaseContext';
-import StepDao, { Step } from '../database/dao/StepDao';
+import  { Project } from '../database/dao/ProjectDao';
+import { Step } from '../database/dao/StepDao';
 import { useDao } from '../stores/daoStores';
+import { projectObjectStore } from '../stores/objectsStore';
+import { observer } from 'mobx-react-lite';
 
 
 interface ListOverViewState {
-    style: string;
-    pages:Array<{title:string,data:Array<any>}>,
+    style: {};
     selectedOption:string,
     steps: Array<Step>
     onProjectView:(project:Project)=>void
   }
 
-const ListProjectsOverViews = ({route}:any) => {
+const ListProjectsOverViews =  observer(({route}:any) => {
 
-    const style = route.params.style || styles ;
     const {interact,categorie,onProjectView,key} = route.params;
     const {projectDao,stepDao} = useDao()
-    const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
     const [state, setState] = useState<ListOverViewState>({
-        pages:[],
-        style:style,
+        style:styles,
         selectedOption:"",
         steps:[],
         onProjectView:onProjectView || (()=>{})
@@ -36,8 +32,8 @@ const ListProjectsOverViews = ({route}:any) => {
 
     const  getAllProjects = () => {
         projectDao.getByCategorie(categorie).then(
-            (projects)=>{
-                setPages([{title:"", data:projects}]);
+            (projs)=>{
+                projectObjectStore.setProjects(categorie,projs)
             }
         );
     }
@@ -53,13 +49,15 @@ const ListProjectsOverViews = ({route}:any) => {
       }, []);
 
    const  onStepChange =(item:string)=>{
-    setState({...state,selectedOption:item});
-    if(item!="-1"){
-        projectDao.getByStepAndCategorie(item,categorie)
-        .then( data=>{ setPages([{title:"", data:data}])});
-    }else{
-        getAllProjects();
-    }
+        setState({...state,selectedOption:item});
+        if(item!="-1"){
+            projectDao.getByStepAndCategorie(item,categorie)
+            .then( projs=>{
+                projectObjectStore.setProjects(categorie,projs)
+            });
+        }else{
+            getAllProjects();
+        }
    }
 
     
@@ -85,10 +83,10 @@ const ListProjectsOverViews = ({route}:any) => {
                             )})
                            }
                     </Picker>
-                    </View>
+                    </View> 
                 </View>
-                <SectionList sections={pages}
-                 renderItem={({item}) =>{ 
+                <SectionList sections={[{title:"",data:projectObjectStore.getCategorie(categorie)}]}
+                 renderItem={({item}:{item:Project}) =>{ 
                     return(
                             <OverViewItem key={key}  style={state.style} item = {item} interact={interact}
                                             onView ={(vItem:any) => {   state.onProjectView(vItem)  }}
@@ -103,7 +101,7 @@ const ListProjectsOverViews = ({route}:any) => {
 
                         />
                     </View>
-                )}
+                )})
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
     dropdown: {
@@ -114,7 +112,7 @@ const styles = StyleSheet.create({
       },
       separator: {
         height: 1,
-        backgroundColor: '#ccc',
+        backgroundColor: '#ECECEC',
       },
       dropdownContainer: {
         margin: 20,

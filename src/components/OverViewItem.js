@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {  Text, View, Image,StyleSheet,Dimensions,
          TouchableOpacity,
 } from 'react-native';
-import {recommended ,inwi} from  '../assets';;
+import {repeat ,inwi} from  '../assets';;
 export default class OverViewItem extends Component{
 
     constructor(props){
@@ -39,7 +39,7 @@ export default class OverViewItem extends Component{
                 {this.props.interact &&
                    
                         <TouchableOpacity onPress={()=> this.setState({liked:!this.state.liked})}>
-                            <Image source={this.state.liked? recommended.imageSource:recommended.imageSource} style={styles.interactInput}/>
+                            <Image source={repeat.imageSource} style={styles.interactInput}/>
                         </TouchableOpacity>
                     
                 }
@@ -61,29 +61,33 @@ const styles = StyleSheet.create({
         fontSize:30
     },
     listItemTitle:{
+        fontFamily:'Gothic A1',
+        fontWeight:"bold",
         color:"#4a545a",
-        paddingLeft:5,
-        width:'20%'
+        paddingLeft:10,
+        width:'30%'
     },
     listItem:{
         display:"flex",
         flexDirection: 'row',
-        padding:5,
+        padding:10,
         alignItems: 'center',
-        backgroundColor:'#fafafa'
+        backgroundColor:'#FFFFFF'
     },
     listItemImage:{
         width:30,
         height:30,
     },
     listItemDescription:{
-        color:"#4a545a",
+        color:"#707070",
         paddingLeft:15,
-        width:'90%'
+        width:'60%',
+        fontFamily: 'Inter',
+        fontWeight: '400',
     },
     interactInput:{
-        width:35,
-        height:35,
+        width:25,
+        height:25,
         marginRight:10
     }
 });

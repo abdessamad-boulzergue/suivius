@@ -5,6 +5,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import ListProjectsOverViews from './ListProjectsOverViews';
 import {inwi} from '../assets';
 import { Project } from '../database/dao/ProjectDao';
+import { ROUTES } from '../constants/routes';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -17,53 +18,28 @@ export default function ProjectScreen({navigation,route}:any) {
         nextRouteRef.current = next;
     }, [next]);  // This effect runs whenever 'next' changes
 
-    const onProjectView = (item: Project) => {
-        console.log("GO TO", nextRouteRef.current);
-        navigation.navigate(nextRouteRef.current, { project: item })
+    const onProjectView = (project: Project) => {
+        console.log("onProjectView ",project)
+        if(project.id_step_status===3)
+          navigation.navigate(ROUTES.ETUDE_REPORT_SCREEN, { project: project })
+        else
+            navigation.navigate(ROUTES.PROJECT_LOCALISATION, { project: project })
       };
-    const pages=[
-        {
-            title:"section1",
-            data:[
-                {
-                    title:"Projet Inwi ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:inwi.imageSource,
-                },
-                {
-                    title:"Projet IAM ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:inwi.imageSource,
-                },
-                {
-                    title:"Projet Orange ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:inwi.imageSource,
-                },
-                {
-                    title:"Projet Oncf ",
-                    description:"Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500",
-                    avatar_url:inwi.imageSource,
-                }
-            ]
-        }
-     ]
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
           style={styles.headerImage}
-          source={require('../assets/images/logo_primary.png')} 
+          source={inwi.imageSource} 
         />
-        <Text style={styles.headerText}>Project Screen</Text>
+        <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
       </View>
       <Tab.Navigator>
         <Tab.Screen name="FTTS" component={ListProjectsOverViews}
           
           initialParams={{ 
             interact:true,
-            pages:pages,
             categorie:"1",
             onProjectView:onProjectView
           }}
@@ -71,7 +47,6 @@ export default function ProjectScreen({navigation,route}:any) {
         <Tab.Screen name="B2B" component={ListProjectsOverViews} 
           initialParams={{ 
             interact:true,
-            pages:pages,
             categorie:"2",
             onProjectView:onProjectView
           }}
@@ -79,7 +54,6 @@ export default function ProjectScreen({navigation,route}:any) {
         <Tab.Screen name="FTTH" component={ListProjectsOverViews} 
           initialParams={{ 
             interact:true,
-            pages:pages,
             categorie:"3",
             onProjectView:onProjectView
           }}
@@ -97,12 +71,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    height:"20%"
   },
   headerImage: {
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color:"black"
+    fontSize: 11,
+    fontFamily:"inter",
+    fontWeight: "500",
+    color:"black",
+    margin:5
   },
 });

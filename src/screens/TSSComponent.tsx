@@ -6,7 +6,7 @@ import { useDao } from "../stores/daoStores";
 import {useState,useEffect} from 'react'
 import { Localisation } from "../database/dao/LocalisationDao";
 
-export default function  TravauxComponent({route}:any){
+export default function  TSSComponent({route}:any){
 
     const{localisationDao} = useDao();
     const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
