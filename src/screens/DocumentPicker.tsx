@@ -3,7 +3,7 @@ import { Button, View, Text, Image } from 'react-native';
 import DocumentPicker, { DocumentPickerResponse } from 'react-native-document-picker';
 
 export default function DocumentSelectorDisplay({route}:any) {
-    const [image, setImage] = useState(null);
+    const [image, setImage] = useState<string|null>(null);
 
   const selectFile = async () => {
 
@@ -12,12 +12,8 @@ export default function DocumentSelectorDisplay({route}:any) {
         type: [DocumentPicker.types.allFiles],
       });
   
-      console.log(
-        res[0].uri,
-        res[0].type, // mime type
-        res[0].name,
-        res[0].size
-      );
+      setImage(res[0].uri);
+
     } catch (err) {
       if (DocumentPicker.isCancel(err)) {
         // User cancelled the picker
@@ -29,10 +25,11 @@ export default function DocumentSelectorDisplay({route}:any) {
   };
 
   return (
-    <View>
+    <View >
       <Button title="Select File" onPress={selectFile} />
-      {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
-
+      <View  style={{alignItems:"center", width: "100%", height: "90%" ,padding:10}}>
+      {image && <Image source={{ uri: image }} style={{ width: "100%", height: "100%" }} />}
+    </View>
     </View>
   );
 };

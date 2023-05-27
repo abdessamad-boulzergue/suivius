@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS PROJECT (
     id_categorie INTEGER NOT NULL,
     id_step_status INTEGER NOT NULL
 );
-CREATE TABLE IF NOT EXISTS LOCALISATION(id_project INTEGER UNIQUE NOT NULL,site VARCHAR(100) , region VARCHAR(100),province VARCHAR(100),addresse VARCHAR(100),type_prestation VARCHAR(100));
+CREATE TABLE IF NOT EXISTS LOCALISATION(id_project INTEGER UNIQUE NOT NULL,site VARCHAR(100) , region VARCHAR(100),province VARCHAR(100),addresse VARCHAR(100),type_prestation VARCHAR(100),lat REAL,lng REAL);
 CREATE TABLE IF NOT EXISTS AUTORISATION (id_project INTEGER UNIQUE NOT NULL, date_demande DATE, date_commission DATE, date_decision DATE, date_paiment DATE,date_sign DATE);
 CREATE TABLE IF NOT EXISTS STEP (id INTEGER UNIQUE NOT NULL, title VARCHAR(100)  NOT NULL);
 CREATE TABLE IF NOT EXISTS CATEGORIE (id INTEGER UNIQUE NOT NULL, title VARCHAR(100)  NOT NULL);
@@ -66,7 +66,7 @@ INSERT INTO  PROJECT        VALUES("4","project 2 inwi  ", "description p1","201
 INSERT INTO  PROJECT        VALUES("5","project 3 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
 INSERT INTO  PROJECT        VALUES("6","project 4 inwi ", "description p1","2012-10-10","2012-10-10","2012-10-10","2012-10-10","1","1","1","1","1")
 
-INSERT INTO  LOCALISATION   VALUES("1","INWI","Rabat-Salé","---","---","propre")
+INSERT INTO  LOCALISATION   VALUES("1","INWI","Rabat-Salé","---","---","propre",'37.78825','-122.4324')
 INSERT INTO  AUTORISATION   VALUES("1","2012-10-10","2012-10-12","2012-10-19","2012-1-10","2012-11-10")
 
 INSERT INTO Work            VALUES("1","1","8","1:30")

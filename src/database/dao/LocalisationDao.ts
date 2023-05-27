@@ -5,7 +5,9 @@ export interface Localisation{
     site:string,
     region:string,
     province:string,
-    addresse:string
+    addresse:string,
+    lat:number,
+    lng:number
 }
 
 export default class LocalisationDao {

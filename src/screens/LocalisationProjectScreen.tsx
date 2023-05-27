@@ -10,7 +10,7 @@ import { Project } from '../database/dao/ProjectDao';
 
 import { Localisation } from '../database/dao/LocalisationDao';
 import { useDao } from '../stores/daoStores';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker,LatLng } from 'react-native-maps';
 import { observer } from "mobx-react-lite";
 import SButton from '../components/common/SButton';
 import { projectObjectStore } from '../stores/objectsStore';
@@ -26,6 +26,7 @@ type Props = {
 const  LocalisationProjectScreen = observer(({route}:any) => {
     const {projectDao} = useDao();
     const [mapReady, setMapReady] = useState(false);
+    const [position,setPosition]=useState<LatLng|null>(null)
     const [region, setRegion] = useState({
         latitude: 37.78825,
         longitude: -122.4324,
@@ -39,6 +40,14 @@ const  LocalisationProjectScreen = observer(({route}:any) => {
    useEffect(()=>{
     localisationDao.getByIdProject(project.id).then(localiz=>{
         setLocalisation(localiz);
+        setRegion({
+            latitude: localiz.lat,
+            longitude: localiz.lng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+        })
+
+        setPosition({ latitude: localiz.lat, longitude:localiz.lng})
     })
    },[])
 
@@ -78,9 +87,9 @@ const  LocalisationProjectScreen = observer(({route}:any) => {
                         region={region}
                         onMapReady={() => setMapReady(true)}
                     >
-                         {mapReady && (
+                         {mapReady && position &&(
                             <Marker
-                                coordinate={{ latitude: 37.78825, longitude: -122.4324 }}
+                                coordinate={position}
                             />
                          )}
                     </MapView>
