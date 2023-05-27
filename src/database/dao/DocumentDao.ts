@@ -3,38 +3,46 @@ import { TABLES } from "./constants";
 
 
 export interface Document{
-    id:number,
-    id_project:number,
+    id?:number,
     path:string,
-    data:string
+    type:string
 }
 
 export default class DocumentDao {
-    private  TABLE_NAME = TABLES.Document.name;
     constructor(private database :Database){}
 
     findById(id:string){
        
     }
 
-    addToPoject(document:Document){
-        this.database.insert(this.TABLE_NAME,{...document})
-        .then(result=>{
-            console.log("insert document : ", result);
-        }).catch(err=>{
-            console.error(err);
-        })
-    }
-    getByIdProject(id_project:number):Promise<Array<Document>>{
+    addToPoject(id_project:number,type:string,document:Document):Promise<number>{
         return new Promise((resolve, reject) => {
-               this.database.selectFromTable(this.TABLE_NAME,[],{id_project:id_project})
-               .then((resultSet)=>{
-                   const staffWork:Array<Document>=[];
+        this.database.insert(TABLES.Document.name,{...document})
+        .then((new_doc_id:number)=>{
+            this.database.insert(TABLES.DocumentProject.name,{id_project:id_project,id_document:new_doc_id,type:type})
+           resolve(new_doc_id);
+        }).catch(err=>{
+            reject(err);
+        })
+    })
+    }
+    getByIdProjectAndType(id_project:number,type:string):Promise<Array<Document>>{
+        return new Promise((resolve, reject) => {
+               this.database.selectFromTable(TABLES.DocumentProject.name,[],{id_project:id_project,type:type})
+               .then(async (resultSet)=>{
+                   const docs:Array<Document>=[];
                    for(let i=0 ; i<resultSet.length ; i++){
-                       const  {id,path,data,id_project} = resultSet.item(i);
-                       staffWork.push({id,path,data,id_project})
+                    let docProject =resultSet.item(i)
+                    const docResult= await this.database.selectFromTable(TABLES.Document.name,[],{id:docProject.id_document})
+                    if(docResult.length>0)
+                        docs.push({
+                            id:docProject.id_document,
+                            path:docResult.item(0).path,
+                            type:""
+                        })
                    }
-                   resolve(staffWork);
+                   console.log("document Project  **** docs : ", docs);
+                   resolve(docs);
                }).catch(error=>{
                    reject(error);
                });

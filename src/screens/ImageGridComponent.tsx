@@ -10,11 +10,12 @@ import { Project } from '../database/dao/ProjectDao';
     uri:string
  }
 const ImageGrid = ({route}:any) => {
-
+    const TYPE_IMG="IMG"
     const  project:Project = route.params.project;
     const [images, setImages] = useState<Array<RNImage>>([{isNew:true,uri:""}]);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const {documentDao} = useDao();
+
   const takePicture = async (camera:RNCamera) => {
     const options = { quality: 0.5, base64: true };
     const data = await camera.takePictureAsync(options);
@@ -22,13 +23,14 @@ const ImageGrid = ({route}:any) => {
     setModalVisible(false)
     console.log(data.uri)
     setImages([...images, {isNew:false,uri:data.uri}]);
-    documentDao.addToPoject({id_project:project.id,id:1,path:data.uri,data:""})
+    documentDao.addToPoject(project.id,TYPE_IMG,{path:data.uri,type:TYPE_IMG})
   };
 
   const  getDocument= () => {
-    documentDao.getByIdProject(project.id).then(
+    documentDao.getByIdProjectAndType(project.id,TYPE_IMG).then(
         (docs)=>{
             const imgs = docs.map(doc=> { return {isNew:false,uri:doc.path}})
+            console.log("imgs data  >>>" , imgs)
             setImages([ {isNew:true,uri:""},...imgs]);
         }
     );

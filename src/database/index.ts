@@ -35,7 +35,7 @@ export default class Database{
                             
                             ["Users","PROJECT","STEP","CATEGORIE","LOCALISATION",
                             "AUTORISATION","StaffMember","Work","Article","ArticleConsume",
-                            "WorkTools","WorkToolsUsage","Document"]
+                            "WorkTools","WorkToolsUsage","Document","DocumentProject"]
                             .forEach(table=>{
                                 this.db.executeSql('DROP TABLE IF EXISTS '+table)                        
                             })
@@ -138,7 +138,7 @@ export default class Database{
 
         return this.executeQuery("UPDATE "+tableName+' SET '+set+' WHERE '+queryColumn, []);
     }
-    insert(tableName:string ,fileds:{[key:string]:any}){
+    insert(tableName:string ,fileds:{[key:string]:any}):Promise<number>{
 
         let queryColumn = Object.keys(fileds)
                     .join(',')
@@ -149,7 +149,25 @@ export default class Database{
                      })
                     .join(',')
 
-        return this.executeQuery("INSERT INTO  "+ tableName +'('+ queryColumn +') VALUES('+ values +')', []);
+        return this.executeInsertQuery("INSERT INTO  "+ tableName +'('+ queryColumn +') VALUES('+ values +')', []);
+    }
+
+    executeInsertQuery(presparedQuery :string, args : Array<string>):Promise<number> {
+        console.log("QUERY =>" , presparedQuery)
+        return new Promise((resolve) => {
+            this.db.transaction((tx) => {
+                    tx.executeSql( presparedQuery, args )
+                    .then(async ([tx, results]) => {
+                        let lastIdResult= await this.executeQuery( 'SELECT last_insert_rowid() as lastId', [] )
+                        let lastId :number= lastIdResult.item(0).lastId;  
+                        return lastId;
+
+                    }).then((results)=> resolve(results));
+                }).catch((err:any) => {
+                    console.log(err);
+                });
+            
+        });
     }
     executeQuery(presparedQuery :string, args : Array<string>):Promise<SQLite.ResultSetRowList> {
         console.log("QUERY =>" , presparedQuery)

@@ -16,6 +16,15 @@ export const TABLES={
             DATA:{name:"data", type:"string"}
         }
     },
+    
+    DocumentProject:{
+        name:"DocumentProject",
+        fields:{
+            ID_PROJECT:{name:"id_project", type:"number"},
+            ID_DOCUMENT:{name:"id_document", type:"number"},
+            TYPE:{name:"type", type:"string"}
+        }
+    },
     WorkToolsUsage:{
         name:"WorkToolsUsage",
         fields:{
