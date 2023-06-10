@@ -14,7 +14,7 @@ export default class StaffDao {
         return new Promise((resolve, reject) => {
         return this.database.insert(this.TABLE_NAME,{name:staff.name})
         .then(result=>{
-                resolve(result.length)
+                resolve(result)
             }).catch(err=>{
             reject(err);
             })

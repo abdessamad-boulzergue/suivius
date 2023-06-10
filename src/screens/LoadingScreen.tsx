@@ -1,15 +1,19 @@
-import { StyleSheet ,Animated,View, Image} from "react-native";
-import {Center} from 'native-base';
+import { StyleSheet ,Animated,View, Image,Dimensions} from "react-native";
+ 
 import { useEffect, useState } from "react";
 import { position } from "native-base/lib/typescript/theme/styled-system";
 import { imgLogo } from "../assets";
+import { useStores } from "../stores/context";
+import LinearGradient from 'react-native-linear-gradient';
+const window = Dimensions.get('window')
 
 
 export default function LoadingScreen(){
     const [rotateValue, setRotateValue] = useState(new Animated.Value(0));
-
+    const store = useStores();
     useEffect(() => {
         startRotation();
+      
       }, []);
     
       const startRotation = () => {
@@ -26,10 +30,13 @@ export default function LoadingScreen(){
         outputRange: ['0deg', '360deg'],
       });
     
+    
 
-    return(
-        <View style={styles.container}>
-            <Image style = {{margin:0,alignSelf:'center', marginTop:'35%',}}
+    return(<LinearGradient 
+      end={{x: 1.0, y: 0.5}}
+      locations={[0, 0.2, 10.0]} // Spread the colors along the gradient
+      colors={['#5C969F','#5C969F', '#29626B']} style={styles.container}>
+            <Image style = {{margin:0,alignSelf:'center', marginTop:'55%',}}
                            source={imgLogo.imageSource}
                        />
             <View style={styles.spiner}>
@@ -41,20 +48,19 @@ export default function LoadingScreen(){
                         <View style={styles.dot5} />
                     </Animated.View>
           </View>
-        </View>
+        
+        </LinearGradient>
     )
 }
 
 const styles = StyleSheet.create({
 
     container:{
-        background: 'linear-gradient(179.15deg, #528C95 -5.13%, #2D666F 89.38%)',
-        flex: 1,
+         resizeMode:'cover',
         alignItems: 'center',
-        flexDirection:"column",
-        paddingBottom: 20, // padding from the bottom of the screen
-        width:'100%',
-        height:'100%',
+        flexDirection:"column", 
+        width:window.width,
+        height:window.height,
       },
       spiner:{
         marginTop:'100%'

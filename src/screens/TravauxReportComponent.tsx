@@ -10,7 +10,7 @@ export default function TravauxReportComponent() {
   return (
     <ScrollView>
 
-     <CollapsibleItem title="BQQ">
+     <CollapsibleItem title="BOQ">
         <View>
         <View style={styles.info}>
                     <Text style={styles.text}>Type de prestation</Text>

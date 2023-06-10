@@ -16,7 +16,6 @@ export default class WorkToolsUsageDao {
     updateDate(id_project:number ,id_tool:number, fileds:{}){
         this.database.update(this.TABLE_NAME,fileds,{id_project:id_project,id_tool:id_tool})
         .then(result=>{
-            console.log("update : ", result);
         }).catch(err=>{
             console.error(err);
         })

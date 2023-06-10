@@ -5,11 +5,12 @@ import {
 import OverViewItem from '../components/OverViewItem';
 import { Picker } from '@react-native-picker/picker';
 import {useEffect, useState} from 'react';
-import { ROUTES } from '../constants/routes';
+import { ROUTES } from '../constants';
 import ProjectDao, { Project } from '../database/dao/ProjectDao';
 import DatabaseContext from '../database/DatabaseContext';
-import StepDao, { Step } from '../database/dao/StepDao';
-import { useDao } from '../stores/daoStores';
+import StepDao from '../database/dao/StepDao';
+import { useDao } from '../stores/context';
+import { Step } from '../database/types';
 
 
 interface ListOverViewState {

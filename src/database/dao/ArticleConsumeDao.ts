@@ -1,12 +1,11 @@
 import Database, { ProjectRepository } from "..";
-import { useDao } from "../../stores/daoStores";
 import ArticleDao, { Article } from "./ArticleDao";
 
 export interface ArticleConsume{
     id_project:number,
     id_article:number,
     quantity:number,
-    article:Article | null
+    article?:Article | null
 }
 
 export default class ArticleConsumeDao {
@@ -14,13 +13,19 @@ export default class ArticleConsumeDao {
     
     constructor(private database :Database , private articleDao:ArticleDao){
     }
-    updateQuantity(id_project:number ,id_article:number, quantity:number){
-        this.database.update(this.TABLE_NAME,{quantity:quantity},{id_project:id_project,id_article:id_article})
-        .then(result=>{
-            console.log("update : ", result);
-        }).catch(err=>{
-            console.error(err);
-        })
+   async updateQuantity(id_project:number ,id_article:number, quantity:number){
+
+      const consume= await this.database.selectFromTable(this.TABLE_NAME,[],{id_project:id_project,id_article:id_article});
+      if(consume.length!=0){
+            this.database.update(this.TABLE_NAME,{quantity:quantity},{id_project:id_project,id_article:id_article})
+            .then(result=>{
+            }).catch(err=>{
+                console.error(err);
+            })
+        }
+      else{
+        await this.database.insert(this.TABLE_NAME,{id_project:id_project,id_article:id_article,quantity:quantity})
+      }
     }
     getByIdProject(id_project:number):Promise<Array<ArticleConsume>>{
         return new Promise((resolve, reject) => {

@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import SuiviInputDate from '../components/InputDate';
-import { useDao } from '../stores/daoStores';
+import { useDao } from '../stores/context';
 import { Autorisation } from '../database/dao/AutorisationDao';
 import { runInAction } from 'mobx';
 import { TABLES } from '../database/dao/constants';

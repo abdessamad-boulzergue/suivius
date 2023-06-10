@@ -13,7 +13,6 @@ const DropdownComponent = () => {
   const handleItemPress = (item:any) => {
     setSelectedValue(item);
     toggleDropdown();
-    console.log('Selected value:', item);
     // Perform any other actions based on the selected value
   };
 

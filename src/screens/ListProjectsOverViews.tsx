@@ -6,32 +6,38 @@ import OverViewItem from '../components/OverViewItem';
 import { Picker } from '@react-native-picker/picker';
 import {useEffect, useState} from 'react';
 import  { Project } from '../database/dao/ProjectDao';
-import { Step } from '../database/dao/StepDao';
-import { useDao } from '../stores/daoStores';
+
+import { useDao } from '../stores/context';
 import { projectObjectStore } from '../stores/objectsStore';
 import { observer } from 'mobx-react-lite';
+import { Step } from '../database/types';
+import { useStores } from '../stores/context';
+import ProjectOverView from '../components/ProjectOverView';
 
 
 interface ListOverViewState {
     style: {};
     selectedOption:string,
     steps: Array<Step>
-    onProjectView:(project:Project)=>void
   }
 
-const ListProjectsOverViews =  observer(({route}:any) => {
+const ListProjectsOverViews =  observer(({route,navigation}:any) => {
 
-    const {interact,categorie,onProjectView,key} = route.params;
+    const {interact,categorie,key} = route.params;
     const {projectDao,stepDao} = useDao()
+    const {rightsStore} = useStores();
     const [state, setState] = useState<ListOverViewState>({
         style:styles,
         selectedOption:"",
-        steps:[],
-        onProjectView:onProjectView || (()=>{})
+        steps:[]
     });
+    const onProjectView = (project: Project) => {
+      const route = rightsStore.getRouteForStatus(project.id_step_status)
+      navigation.navigate(route, { project: project })
+    };
 
     const  getAllProjects = () => {
-        projectDao.getByCategorie(categorie).then(
+        projectDao.getForUserByCategorie(rightsStore.currentUser.id,categorie).then(
             (projs)=>{
                 projectObjectStore.setProjects(categorie,projs)
             }
@@ -44,14 +50,13 @@ const ListProjectsOverViews =  observer(({route}:any) => {
     }
 
     useEffect(() => {
-       getAllProjects();
         getAllSteps();
       }, []);
 
-   const  onStepChange =(item:string)=>{
-        setState({...state,selectedOption:item});
-        if(item!="-1"){
-            projectDao.getByStepAndCategorie(item,categorie)
+   const  onStepChange =(id_step:string)=>{
+        setState({...state,selectedOption:id_step});
+        if(id_step!="-1"){
+            projectDao.getForUserByStepAndCategorie(rightsStore.currentUser.id,id_step,categorie)
             .then( projs=>{
                 projectObjectStore.setProjects(categorie,projs)
             });
@@ -60,7 +65,6 @@ const ListProjectsOverViews =  observer(({route}:any) => {
         }
    }
 
-    
   const renderSeparator = () => {
     return <View style={styles.separator} />;
   };
@@ -68,7 +72,7 @@ const ListProjectsOverViews =  observer(({route}:any) => {
         return (
             <View style={{flex: 1,}}>
                 <View style={styles.dropdownContainer}>
-                    <Text style={styles.label}>Select an option:</Text>
+                    <Text style={styles.label}>L'etap du projet * </Text>
                     <View style={styles.pickerContainer}>
                           <Picker
                             style={styles.picker}
@@ -88,8 +92,8 @@ const ListProjectsOverViews =  observer(({route}:any) => {
                 <SectionList sections={[{title:"",data:projectObjectStore.getCategorie(categorie)}]}
                  renderItem={({item}:{item:Project}) =>{ 
                     return(
-                            <OverViewItem key={key}  style={state.style} item = {item} interact={interact}
-                                            onView ={(vItem:any) => {   state.onProjectView(vItem)  }}
+                            <ProjectOverView key={key} item = {item} navigation={navigation}
+                                            onView ={(vItem:any) => {   onProjectView(vItem)  }}
                                                             />
                             )}}
                         renderSectionHeader={({section}) => {
@@ -119,10 +123,10 @@ const styles = StyleSheet.create({
         marginBottom:0
       },
       label: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '400',
         marginBottom: 8,
-        color:"black"
+        color:"#2F3437"
       },
       pickerContainer: {
         flexDirection: 'row',
@@ -134,7 +138,9 @@ const styles = StyleSheet.create({
       picker: {
         flex: 1,
         height: 40,
-        color: '#000',
+        color: '#75828A',
+        backgroundColor:'#FFFFFF',
+        borderColor:'#C8CDD0'
       },
       pickerItem: {
         color: 'black', // Replace with the desired color

@@ -12,12 +12,13 @@ import {
 import type {PropsWithChildren} from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 
-import {imgLogo, shield,user,toggle_off,toggle_on} from '../../assets'
+import {imgLogo, eye,question_mark_circle} from '../../assets'
 import  AsyncStorage from '@react-native-async-storage/async-storage';
-import { ROUTES } from '../../constants/routes';
+import { ROUTES } from '../../constants';
 import { useStores } from '../../stores/context';
 import {useEffect, useState} from 'react';
 import LoginButton from '../../components/common/LoginButton';
+import { projectObjectStore } from '../../stores/objectsStore';
 const window = Dimensions.get('window')
 
 interface LoginState {
@@ -32,13 +33,14 @@ interface LoginState {
   const LoginScreen  = () => {
 
     const {loginStore} = useStores();
-
+    const [ip, setIp] = useState("");
     const [state, setState] = useState<LoginState>({
         error:'',
         isLoading:false,
         liked:false,
         username:'test',
-        password:'text'
+        password:'pass',
+        
     });
 
     const validate = ({username,password}:any)=>{
@@ -68,7 +70,8 @@ interface LoginState {
         if (validate(user)){
             setState({...state,isLoading: true});
             //this.props.navigation.navigate(ROUTES.HOMESTACK);
-            await loginStore.loginHandler({data:{token:"text"}})
+           // await loginStore.regularLogin({username: userName, password});
+            await loginStore.regularLogin(user)
             setState({...state,isLoading: false});
 
         }else{
@@ -76,18 +79,26 @@ interface LoginState {
 
         }
     };
-
+    const saveIp =(text:string)=>{
+        setIp(text);
+        projectObjectStore.API_URL=text; 
+        AsyncStorage.setItem('SERVER_IP',text)
+    }
     useEffect(() => {
-
         AsyncStorage.getItem('userName')
         .then((username)=>{
            setState({ ...state,username: username || "" });
         })
-   AsyncStorage.getItem('REMEMBER')
-       .then((liked)=>{
-        setState({ ...state,liked:(liked=="true")});
-       })
-
+        AsyncStorage.getItem('SERVER_IP').then(ip=>{
+            if(ip) {
+                setIp(ip)
+                projectObjectStore.API_URL=ip;
+            }
+        });
+        AsyncStorage.getItem('REMEMBER')
+            .then((liked)=>{
+                setState({ ...state,liked:(liked=="true")});
+            })
       }, []);  // Empty array means this effect will only run once
     
 
@@ -100,37 +111,45 @@ interface LoginState {
              style={styles.content}>
                <View >
                    <View style = {styles.container}>
-                       <Image style = {{margin:0}}
+                       <Image style = {{marginTop:'25%'}}
                            source={imgLogo.imageSource}
                        />
 
                        <View style={{width:'80%',marginBottom:25,marginTop:65}}>
-                            <Text>Entrez vos coordonnées pour vous connecter à votre compte</Text>
+                            <Text style={{fontFamily:'Inter',fontWeight:'400',fontSize:15,lineHeight:19}}>Entrez vos coordonnées pour vous connecter à votre compte</Text>
                        </View>
+                       <View style={styles.SectionStyle}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="server"
+                            value = {ip}
+                            onChangeText={(value)=>saveIp(value)}
+                        />
+                        </View>
                 <View style={styles.SectionStyle}>
-                    <Image
-                        source={user.imageSource} //Change your icon image here
-                        style={styles.ImageStyle}
-                    />
-
+                
                     <TextInput
                         style={styles.input}
                         placeholder="User Name"
                         value = {state.username}
                         onChangeText={(value)=>{  setState({ ...state,username : value}); }}
                     />
-                 </View>
-                <View style={styles.SectionStyle}>
                     <Image
-                        source={shield.imageSource} //Change your icon image here
+                        source={question_mark_circle.imageSource} //Change your icon image here
                         style={styles.ImageStyle}
                     />
-                    <TextInput
+                 </View>
+                <View style={styles.SectionStyle}>
+                  <TextInput
                         style={styles.input}
                         textContentType="password"
                         secureTextEntry={true}
                         placeholder="Password"
                         onChangeText={(value)=>{  setState({ ...state,password : value}); }}
+                    />
+                    <Image
+                        source={eye.imageSource} //Change your icon image here
+                        style={styles.ImageStyle}
                     />
                 </View>
                      
@@ -196,7 +215,7 @@ const styles = StyleSheet.create({
         borderWidth: 0.5,
         borderColor: '#000',
         height: 45,
-        width:'100%',
+        width:'85%',
         borderRadius: 20,
         margin: 15,
     },

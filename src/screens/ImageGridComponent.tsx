@@ -3,34 +3,36 @@ import React, { useState,useEffect } from 'react';
 import { FlatList, TouchableOpacity, Text,Image, View, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { RNCamera } from 'react-native-camera';
-import { useDao } from '../stores/daoStores';
+import { useDao } from '../stores/context';
 import { Project } from '../database/dao/ProjectDao';
+import { DOC_TYPES } from '../constants';
+
  interface RNImage{
     isNew:boolean,
     uri:string
  }
 const ImageGrid = ({route}:any) => {
-    const TYPE_IMG="IMG"
+  
     const  project:Project = route.params.project;
     const [images, setImages] = useState<Array<RNImage>>([{isNew:true,uri:""}]);
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [cameraVisible, setCameraVisible] = useState<boolean>(false);
     const {documentDao} = useDao();
-
+    console.log(project)
   const takePicture = async (camera:RNCamera) => {
     const options = { quality: 0.5, base64: true };
     const data = await camera.takePictureAsync(options);
     // Assuming that the image data is in `data.uri`
-    setModalVisible(false)
-    console.log(data.uri)
+    setCameraVisible(false)
+    const filePathParts = data.uri.split('/');
+     const fileName = filePathParts[filePathParts.length - 1];
     setImages([...images, {isNew:false,uri:data.uri}]);
-    documentDao.addToPoject(project.id,TYPE_IMG,{path:data.uri,type:TYPE_IMG})
+    documentDao.addToPoject(project.id,DOC_TYPES.TSS_IMAGE,{path:data.uri,type:"image/jpeg",name:fileName})
   };
 
   const  getDocument= () => {
-    documentDao.getByIdProjectAndType(project.id,TYPE_IMG).then(
+    documentDao.getByIdProjectAndType(project.id,DOC_TYPES.TSS_IMAGE).then(
         (docs)=>{
             const imgs = docs.map(doc=> { return {isNew:false,uri:doc.path}})
-            console.log("imgs data  >>>" , imgs)
             setImages([ {isNew:true,uri:""},...imgs]);
         }
     );
@@ -42,7 +44,7 @@ useEffect(()=>{
  
   return (
     <View style={styles.container}>
-        {modalVisible &&
+        {cameraVisible &&
         <RNCamera
                     style={styles.preview}
                     type={RNCamera.Constants.Type.back}
@@ -78,13 +80,13 @@ useEffect(()=>{
         renderItem={({ item }:{item:RNImage}) => {
           return (
             <View style={{padding:15}}>
-            { item.isNew && !modalVisible &&
+            { item.isNew && !cameraVisible &&
                  <Button style={{ width: 100, height: 100 }}
-                 onPress={()=>setModalVisible(true)}>
+                 onPress={()=>setCameraVisible(true)}>
                     <Icon size={20} color="black" name="md-camera"/>
                  </Button>
             }
-            { !item.isNew && !modalVisible &&
+            { !item.isNew && !cameraVisible &&
               <Image
                 source={{ uri: item.uri }}
                 style={{ width: 100, height: 100 }} // Update this to control the size of the images

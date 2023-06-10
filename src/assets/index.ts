@@ -9,7 +9,15 @@ export const drawerOpen: ImageSource = {
 export const imageSignIn1Bg: ImageSource = {
     imageSource: require('./images/image-background-auth.jpg'),
 };
-
+export const  question_mark_circle: ImageSource = {
+    imageSource: require('./images/question_mark_circle.png'),
+};
+export const  eye: ImageSource = {
+    imageSource: require('./images/eye.png'),
+};
+export const  warning: ImageSource = {
+    imageSource: require('./images/warning.png'),
+};
 export const repeat: ImageSource = {
     imageSource: require('./images/repeat.png'),
 };

@@ -32,19 +32,11 @@ export default class Database{
                 location: location,
               }).then(DB => {
                             this.db = DB;
-                            
-                            ["Users","PROJECT","STEP","CATEGORIE","LOCALISATION",
-                            "AUTORISATION","StaffMember","Work","Article","ArticleConsume",
-                            "WorkTools","WorkToolsUsage","Document","DocumentProject"]
-                            .forEach(table=>{
-                                this.db.executeSql('DROP TABLE IF EXISTS '+table)                        
-                            })
-
+                            this.resetDB();
                             this.db.executeSql('SELECT 1 FROM Users LIMIT 1').then(() => {
                                 console.log("Database is ready ... executing query ...");
                             }).catch((error) =>{
-                                console.log("Received error: ", error);
-                                console.log("Database not yet ready ... populating data");
+                                console.log("Database not yet ready, Received error: ", error);
                                 this.db.transaction((tx) => {
                                     this.createTables(tx)
                                     this.initData(tx);
@@ -65,11 +57,21 @@ export default class Database{
     createTables(tx:SQLite.Transaction){
         data_table_create.split(";")
          .map(query=>query.replace("\n",""))
-         .filter( q => q && q.trim().length>0)
+         .filter( q => q && q.trim().length>0 && !q.trim().startsWith("#"))
          .forEach(q => tx.executeSql(q))
+    }
+    resetDB(){
+        ["Users","Client","PrestataireUsers","Prestataire","PROJECT","STEP","CATEGORIE",
+        "ClientUsers","LOCALISATION","StepUserPermission","ProjectAffectation",
+        "AUTORISATION","StaffMember","Work","Article","ArticleConsume",
+        "WorkTools","WorkToolsUsage","Document","DocumentProject","TSS","ProjectWorkDetails"]
+        .forEach(table=>{
+            this.db.executeSql('DROP TABLE IF EXISTS '+table)                        
+        })
     }
     initData(tx:SQLite.Transaction){
         data_insert.split("\n")
+        .filter(q=>!q.startsWith('#'))
         .forEach(query=>{
            if(query && query.trim())
                 tx.executeSql(query);
@@ -153,7 +155,6 @@ export default class Database{
     }
 
     executeInsertQuery(presparedQuery :string, args : Array<string>):Promise<number> {
-        console.log("QUERY =>" , presparedQuery)
         return new Promise((resolve) => {
             this.db.transaction((tx) => {
                     tx.executeSql( presparedQuery, args )
@@ -170,7 +171,6 @@ export default class Database{
         });
     }
     executeQuery(presparedQuery :string, args : Array<string>):Promise<SQLite.ResultSetRowList> {
-        console.log("QUERY =>" , presparedQuery)
         return new Promise((resolve) => {
             this.db.transaction((tx) => {
                     tx.executeSql( presparedQuery, args ).then(([tx, results]) => {

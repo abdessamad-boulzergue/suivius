@@ -28,7 +28,7 @@ export default class WorkDao {
             nbr_hour: work.nbr_hour
         })
         .then(result=>{
-          resolve(result.length);
+          resolve(result );
         }).catch(err=>{
            reject(err);
         })
@@ -37,13 +37,11 @@ export default class WorkDao {
     updateDate(id_project:number ,id_staff:number, fileds:{}){
         this.database.update(this.TABLE_NAME,fileds,{id_project:id_project,id_staff:id_staff})
         .then(result=>{
-            console.log("update : ", result);
         }).catch(err=>{
             console.error(err);
         })
     }
     getByIdProject(id_project:number):Promise<Array<Work>>{
-        console.log(" GET PROJE" , id_project)
         return new Promise((resolve, reject) => {
                this.database.selectFromTable(this.TABLE_NAME,[],{id_project:id_project})
                .then(async (resultSet)=>{

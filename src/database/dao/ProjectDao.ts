@@ -1,5 +1,17 @@
+import { format } from "date-fns";
 import Database, { ProjectRepository } from "..";
+import { API_URL } from "../../config";
+import { DOC_TYPES, SIMPLE_DATE_FORMAT } from "../../constants";
+import { httpDelete, httpGet, httpPost, httpPut, sendFileToServer } from "../../network/httpService";
+import { RootStore } from "../../stores/context";
+import { DocumentProject, StatusUpdateResponseDto, Step } from "../types";
 import { TABLES } from "./constants";
+import { Tss } from "./TssDao";
+import RNFS from 'react-native-fs';
+import { uploadFiles } from "../../utils/uploadFiles";
+import { Article } from "./ArticleDao";
+import { ArticleConsume } from "./ArticleConsumeDao";
+import { BoqDto } from "../../services/types";
 
 export interface Project{
     id:number,
@@ -11,21 +23,29 @@ export interface Project{
     fin_estime:Date,
     id_step:number
     id_categorie:number
-    id_step_status:number
+    id_step_status:number,
+    id_tss:number | null;
+    step?:Step
 }
 const stepStatusFLow : {[key:string]:any}={
-    "1":{previous:()=>null,next:()=>2 ,step:2},
-    "2":{ previous:()=>1, next:()=>3,step:2},
-    "3":{ previous:(get:()=>{})=>get(), next:(get:()=>{})=>get(),step:2}
+    "1":{previous:()=>null,next:()=>2 ,step:1},
+    "2":{ previous:()=>1, next:()=>3,step:1},
+    "3":{ previous:()=>2, next:()=>4,step:1},
+    "4":{ previous:()=>3, next:()=>5,step:1},
+    "5":{ previous:()=>4, next:()=>6,step:1},
+    "6":{ previous:()=>5, next:()=>7,step:1},
+    "7":{ previous:()=>6, next:()=>8,step:1},
+    "8":{ previous:()=>7, next:()=>9,step:1},
+    "9":{ previous:()=>8, next:()=>3,step:1},
+    "x":{ previous:(get:()=>{})=>get(), next:(get:()=>{})=>get(),step:2}
 }
 export default class ProjectDao {
-    private  TABLE_NAME = 'PROJECT'
 
-    constructor(private database :Database){}
+    constructor(private database :Database,private stores: RootStore){}
 
     findById(id:number):Promise<Project|null>{
         return new Promise((resolve, reject) => {
-               this.database.selectFromTable(this.TABLE_NAME,[],{id:id})
+               this.database.selectFromTable(TABLES.PROJECT.name,[],{id:id})
                .then((resultSet)=>{
                    if(resultSet.length>0 ){
                         resolve(resultSet.item(0));
@@ -36,17 +56,32 @@ export default class ProjectDao {
                });
        });
    }
+   setTssId(id_project:number,id_tss :number):Promise<Project>{
+    return new Promise(async (resolve, reject) => {
+        const project= await this.findById(id_project);
+        if(project){
+            this.database.update(TABLES.PROJECT.name,{
+                   id_tss:id_tss,
+                },{
+                    id:project.id
+                }).then(result=>{
+                    resolve(project)
+                }).catch(error=>{
+                    reject(error)
+                })
+            
+        }
+    })
+   }
   nextStep(id:number):Promise<Project>{
         return new Promise(async (resolve, reject) => {
             const project= await this.findById(id);
             if(project){
-                if(project.id_step_status!==3){
                 const nextStepStatus= stepStatusFLow[project.id_step_status].next();
                 const step_id = stepStatusFLow[nextStepStatus].step;
-
                 project.id_step = step_id
                 project.id_step_status=nextStepStatus
-                this.database.update(this.TABLE_NAME,{
+                this.database.update(TABLES.PROJECT.name,{
                         id_step:project.id_step,
                         id_step_status:project.id_step_status
                     },{
@@ -56,7 +91,29 @@ export default class ProjectDao {
                     }).catch(error=>{
                         reject(error)
                     })
-                }
+                
+            }
+        })
+    }
+    toStepStatus(id_status:number,id_project:number):Promise<Project>{
+        return new Promise(async (resolve, reject) => {
+            const project= await this.findById(id_project);
+            if(project){
+               // const nextStepStatus= stepStatusFLow[project.id_step_status].next();
+                const step_id = stepStatusFLow[id_status].step;
+                project.id_step = step_id
+                project.id_step_status=id_status
+                this.database.update(TABLES.PROJECT.name,{
+                        id_step:project.id_step,
+                        id_step_status:project.id_step_status
+                    },{
+                        id:project.id
+                    }).then(result=>{
+                        resolve({...project})
+                    }).catch(error=>{
+                        reject(error)
+                    })
+                
             }
         })
     }
@@ -66,7 +123,7 @@ export default class ProjectDao {
             delete : (id:string)=> {
                 let ids =new Map();
                 ids.set("ID",id);
-                return this.database.deleteFromTable(this.TABLE_NAME,ids);
+                return this.database.deleteFromTable(TABLES.PROJECT.name,ids);
             },
             insert : (prod : Map<string,string>) => {
                 if (prod) {
@@ -77,7 +134,7 @@ export default class ProjectDao {
                             return '?'
                         }).join(',');
 
-                    const query = 'INSERT INTO '+this.TABLE_NAME+' VALUES ('+ values +')';
+                    const query = 'INSERT INTO '+TABLES.PROJECT.name+' VALUES ('+ values +')';
                     return this.database.executeQuery(query, args);
                 }
                 return new Promise((resolve ,reject) => { reject('inserted entity is not defined');});;
@@ -87,7 +144,7 @@ export default class ProjectDao {
   
     getByStep(id_step:string):Promise<Array<Project>>{
         return new Promise((resolve, reject) => {
-               this.database.selectFromTable(this.TABLE_NAME,[],{id_step:id_step})
+               this.database.selectFromTable(TABLES.PROJECT.name,[],{id_step:id_step})
                .then((resultSet)=>{
                    const projects:Array<Project>=[];
                    for(let i=0 ; i<resultSet.length ; i++){
@@ -100,26 +157,226 @@ export default class ProjectDao {
        });
    }
    getByStepAndCategorie(id_step:string,id_categorie:string):Promise<Array<Project>>{
-    return new Promise((resolve, reject) => {
-           this.database.selectFromTable(this.TABLE_NAME,[],{id_categorie:id_categorie,id_step:id_step })
-           .then((resultSet)=>{
-               const projects:Array<Project>=[];
-               for(let i=0 ; i<resultSet.length ; i++){
-                   projects.push(resultSet.item(i))
-               }
-               resolve(projects);
-           }).catch(error=>{
-               reject(error);
-           });
-   });
-}
-   getByCategorie(id_categorie:string):Promise<Array<Project>>{
         return new Promise((resolve, reject) => {
-            this.database.selectFromTable(this.TABLE_NAME,[],{id_categorie:id_categorie})
-            .then((resultSet)=>{
+            this.database.selectFromTable(TABLES.PROJECT.name,[],{id_categorie:id_categorie,id_step:id_step })
+            .then(async (resultSet)=>{
                 const projects:Array<Project>=[];
                 for(let i=0 ; i<resultSet.length ; i++){
-                    projects.push(resultSet.item(i))
+                    const project:Project = resultSet.item(i);
+                    const step =await this.stores.daoStores.stepDao.getById(project.id_step)  || undefined  
+                    projects.push({...project,step:step})
+                }
+                resolve(projects);
+            }).catch(error=>{
+                reject(error);
+            });
+        });
+    }
+    getForUserByStepAndCategorie(id_user:number,id_step:string,id_categorie:string):Promise<Array<Project>>{
+        return new Promise((resolve, reject) => {
+            this.database.selectFromTable(TABLES.ProjectAffectation.name,[],{id_user:id_user})
+            .then(async(resultSet)=>{
+                const projects:Array<Project>=[];
+                for(let i=0 ; i<resultSet.length ; i++){
+                    const {id_project} = resultSet.item(0);
+                    const rs = await  this.database.selectFromTable(TABLES.PROJECT.name,[],{id :id_project, id_step:id_step,id_categorie:id_categorie});
+                    if(rs.length>0){
+                        const project:Project = rs.item(0);
+                        const step =await this.stores.daoStores.stepDao.getById(project.id_step)  || undefined  
+                        projects.push({...project,step:step})
+                    }
+                }
+                resolve(projects);
+            }).catch(error=>{
+                reject(error);
+            });
+    });
+    }
+    getForUserByCategorie(id_user:number,id_categorie:string):Promise<Array<Project>>{
+        return new Promise((resolve, reject) => {
+            this.database.selectFromTable(TABLES.ProjectAffectation.name,[],{id_user:id_user})
+            .then(async(resultSet)=>{
+                const projects:Array<Project>=[];
+                for(let i=0 ; i<resultSet.length ; i++){
+                    let {id_project} = resultSet.item(i);
+                    const rs = await  this.database.selectFromTable(TABLES.PROJECT.name,[],{id :id_project, id_categorie:id_categorie});
+                    if(rs.length>0){
+                        const project:Project = rs.item(0);
+                        const step =await this.stores.daoStores.stepDao.getById(project.id_step)  || undefined  
+                        projects.push({...project,step:step})
+                    }
+                }
+                resolve(projects);
+            }).catch(error=>{
+                reject(error);
+            });
+    });
+    }
+    insert(project:any){
+        this.database.insert(TABLES.PROJECT.name,project)
+    }
+    preValidateTss(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const tss :Tss|null= await this.stores.daoStores.tssDao.getById(project.id)
+            if(tss){
+                const tssDto:any={
+                     cableTypeId:tss.cableType,
+                     siteTypeId:tss.siteType,
+                     connectionTypeId:tss.connectionType,
+                     equipmentTypeId:tss.equipmentType,
+                }
+                const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateTss(project.id),tssDto,"")
+   
+                resolve(response.data);
+
+            }
+        })
+    }
+    async addIssue(project_id:number, status_id:number, description:string){
+        await httpPost<Array<any>>( API_URL.issues(project_id),{stepStatusId:status_id,description:description},"")
+    }
+    async endIssue(project_id:number){
+        await httpPut( API_URL.issues(project_id),{},"");
+    }
+    validateTss(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+                const response = await httpPost<StatusUpdateResponseDto>( API_URL.validateTss(project.id),{},"")   
+                resolve(response.data);
+        })
+    }
+    validateAPD(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const response =   await httpPost<StatusUpdateResponseDto>( API_URL.validateAPD(project.id),{},"")   
+            resolve(response.data);
+        })
+    }
+    startStudy(project_id:number):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startStudy(project_id),{},"")  
+            resolve(dto.data);
+    })
+    }
+    startTssEditionEdition(project_id:number):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startTss(project_id),{},"")  
+            resolve(dto.data);
+    })
+    }
+    preValidateAPD(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateAPD(project.id),{},"")   
+                resolve(response.data);
+        })
+    }
+    rejectTSS(project:Project, motif:string):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+           const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectTss(project.id),{motif:motif},"")    
+         resolve(response.data);
+
+        })
+    }
+    rejectAPD(project:Project,motif:string):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectApd(project.id),{motif:motif},"")    
+            resolve(response.data);
+
+        })
+    }
+    sendAPD(project:Project):Promise<StatusUpdateResponseDto>{
+
+        return new Promise(async (resolve, reject) => {
+
+            const docs = await this.stores.daoStores.documentDao.getByIdProject(project.id)
+            const formDataImg = new FormData();
+             docs.filter(doc=>doc.type===DOC_TYPES.APD).forEach(async (doc:DocumentProject)=>{
+               const fileData = { name: doc.document.name,  type: doc.document.type, uri: doc.document.path}
+                formDataImg.append('files', fileData);
+            })
+
+            const consumes :ArticleConsume[]= await this.stores.daoStores.articleConsumeDao.getByIdProject(project.id)
+            const details :BoqDto[] = consumes.map(cons=>{
+                return {articleId:cons.id_article , quantity:cons.quantity,unite:"",title:""}
+            })
+            if(formDataImg.getParts().length>0){
+                const data = await sendFileToServer(API_URL.documents(DOC_TYPES.APD,project.id),formDataImg)
+            }
+           const response =  await httpPost<StatusUpdateResponseDto>( API_URL.boq(project.id),{details:details},"")   
+
+            resolve(response.data);     
+         })
+    }
+    syncTss(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+            const tss  = await this.stores.daoStores.tssDao.getById(project.id)
+            const docs = await this.stores.daoStores.documentDao.getByIdProject(project.id)
+            const projectWorkDetailsDb = await this.stores.daoStores.projectWorkDetailsDao.getByIdProject(project.id)
+            const projectWorkDetailsDto = projectWorkDetailsDb.map(wdt=>{
+                return {workInfoId:wdt.id_info,value:wdt.value}
+            });
+            const formDataCroquis = new FormData();
+            const formDataImg = new FormData();
+             docs.forEach(async (doc:DocumentProject)=>{
+                 const fileData = { name: doc.document.name,  type: doc.document.type, uri: doc.document.path}
+                if(doc.type===DOC_TYPES.CROQUIS)
+                    formDataCroquis.append('files', fileData);
+                else if(doc.type===DOC_TYPES.TSS_IMAGE)
+                    formDataImg.append('files', fileData);
+            })
+            if(tss){
+                const tssDto:any={
+                     cableTypeId:tss.cableType,
+                     siteTypeId:tss.siteType,
+                     connectionTypeId:tss.connectionType,
+                     equipmentTypeId:tss.equipmentType,
+                     workDetails:projectWorkDetailsDto
+                }                
+                if(formDataCroquis.getParts().length>0){
+                    const data = await sendFileToServer(API_URL.documents(DOC_TYPES.CROQUIS,project.id),formDataCroquis)
+                }
+                if(formDataImg.getParts().length>0){
+                    const data = await sendFileToServer(API_URL.documents(DOC_TYPES.TSS_IMAGE,project.id),formDataImg)
+                }
+
+               const tssResponse = await httpPost<StatusUpdateResponseDto>( API_URL.tss(project.id),tssDto,"")
+
+                resolve(tssResponse.data);
+
+            }
+        })
+    }
+    getAllProjects():Promise<Array<Project>>{
+        return new Promise((resolve, reject) => {
+         httpGet<Array<any>>(this.stores.apiStore.defaultUrl + API_URL.getProjects(),  this.stores.loginStore.userToken)
+         .then(data=>{
+            if(data)
+               data.forEach(({category,step,stepStatus,id,title})=>{
+                this.database.insert(TABLES.PROJECT.name,{
+                    id_categorie : category.id,
+                    id_step: step.id,
+                    id_step_status:stepStatus.id,
+                    title:title,
+                    id:id,
+                    debut_estime: format(new Date(),SIMPLE_DATE_FORMAT),
+                    debut_reel:format(new Date(),SIMPLE_DATE_FORMAT),
+                    description:"",
+                    fin_estime:format(new Date(),SIMPLE_DATE_FORMAT),
+                    fin_reel:format(new Date(),SIMPLE_DATE_FORMAT),
+                    id_client:1,
+                
+                })
+              })
+         })
+        })
+    }
+   getByCategorie(id_categorie:string):Promise<Array<Project>>{
+        return new Promise((resolve, reject) => {
+            this.database.selectFromTable(TABLES.PROJECT.name,[],{id_categorie:id_categorie})
+            .then(async (resultSet)=>{
+                const projects:Array<Project>=[];
+                for(let i=0 ; i<resultSet.length ; i++){
+                    const project:Project = resultSet.item(i);
+                    const step =await this.stores.daoStores.stepDao.getById(project.id_step)  || undefined  
+                    projects.push({...project,step:step})
                 }
                 resolve(projects);
             }).catch(error=>{
@@ -143,11 +400,13 @@ export default class ProjectDao {
     }
      getAll():Promise<Array<Project>>{
          return new Promise((resolve, reject) => {
-                this.database.selectFromTable(this.TABLE_NAME,[],{})
-                .then((resultSet)=>{
+                this.database.selectFromTable(TABLES.PROJECT.name,[],{})
+                .then(async(resultSet)=>{
                     const projects:Array<Project>=[];
                     for(let i=0 ; i<resultSet.length ; i++){
-                        projects.push(resultSet.item(i))
+                        const project:Project = resultSet.item(i);
+                        const step =await this.stores.daoStores.stepDao.getById(project.id_step)  || undefined  
+                        projects.push({...project,step:step})
                     }
                     resolve(projects);
                 }).catch(error=>{

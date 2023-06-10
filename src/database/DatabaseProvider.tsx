@@ -6,16 +6,7 @@ import {action} from 'mobx';
 
 const DatabaseProvider = ({ children }:any) => {
 
-  useEffect(() => {
-    AsyncStorage.getItem('db_inited').then(
-            action((data: any) => {
-              if (!data) {
-                database.initDB();
-              }
-            }),
-          );
-  }, []);
-
+ 
   return (
     <DatabaseContext.Provider value={database}>{children}</DatabaseContext.Provider>
   );

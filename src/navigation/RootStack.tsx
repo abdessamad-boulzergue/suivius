@@ -2,17 +2,19 @@ import React, {useEffect,useState} from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useStores} from '../stores/context';
 import HomeStack from './HomeStack';
-import {ROUTES} from '../constants/routes';
+import {ROUTES} from '../constants';
 import AuthStack from './AuthStack';
 import { SafeAreaView ,View} from 'react-native';
 import {observer} from 'mobx-react-lite';
 import LoadingScreen from '../screens/LoadingScreen';
+import { loadUserProjects } from '../services';
+import { projectObjectStore } from '../stores/objectsStore';
 
 const Stack = createNativeStackNavigator();
 
 const RootStack = observer(() => {
     const [isLoading, setIsLoading] = useState(true);
-    const {loginStore} = useStores();
+    const {loginStore ,rightsStore,isLoadingData,startLoadingData} = useStores();
     const { 
             userToken,
          setInitialDetailsFromAsyncStorage,
@@ -30,7 +32,6 @@ const RootStack = observer(() => {
 
         return () => clearTimeout(timer);
     }, []);
-
    
 
   return (
@@ -43,6 +44,7 @@ const RootStack = observer(() => {
         <SafeAreaView style={{flex:1}}>
         <Stack.Navigator>
           {userToken ? (
+          
             <Stack.Screen
               options={{headerShown: false}}
               name={ROUTES.HOMESTACK}

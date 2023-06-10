@@ -3,7 +3,7 @@ import {APP_TOKEN, appEndpoint} from '../config';
 
 export class ApiStore {
   modes :{[key:string]:string}  = {
-    DEV: 'https://app-dev.dappros.com/v1',
+    DEV: 'http://192.168.56.223:8083/suivius/api/v1',
     PROD: 'https://app.dappros.com/v1',
     QA: 'https://app-dev.dappros.com/v1',
   };

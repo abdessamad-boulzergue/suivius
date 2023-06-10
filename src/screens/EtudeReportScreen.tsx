@@ -2,16 +2,12 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import ListOverViews from './ListProjectsOverViews';
 import {inwi} from '../assets';
-import StaffActivity from './StaffActivityComponent';
-import ToolsActivityComponent from './ToolsActivityComponent';
-import {ModalExample} from './Modal';
-import ArticleConsumeComponent from './ArticleConsumeComponent';
 import ImageGrid from './ImageGridComponent';
 import TSSComponent from './TSSComponent';
 import TravauxComponent from './TravauxComponent';
 import DocumentSelectorDisplay from './DocumentPicker';
+import { DOC_TYPES } from '../constants';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -22,30 +18,35 @@ export default function EtudeReportScreen({route}:any) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image
-          style={styles.headerImage}
-          source={require('../assets/images/logo_primary.png')} 
-        />
-        <Text style={styles.headerText}>Rapport activité</Text>
-      </View>
-      <Tab.Navigator>
+            <Image
+              style={styles.headerImage}
+              source={inwi.imageSource}
+            />
+            <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
+        </View>
+      <Tab.Navigator
+      >
         <Tab.Screen name="TSS" component={TSSComponent} 
+         options={commonTopBarOptions}
           initialParams={{ 
             project:project
           }}
         />
         <Tab.Screen name="Details Travaux" component={TravauxComponent} 
-
+          options={commonTopBarOptions}
           initialParams={{ 
             project:project
           }}
         />
         <Tab.Screen name="Croquis" component={DocumentSelectorDisplay} 
+        options={commonTopBarOptions}
           initialParams={{ 
-            project:project
+            project:project,
+            type:DOC_TYPES.CROQUIS
           }}
         />
         <Tab.Screen name="Photos" component={ImageGrid} 
+        options={commonTopBarOptions}
           initialParams={{ 
             project:project
           }}
@@ -54,7 +55,16 @@ export default function EtudeReportScreen({route}:any) {
     </View>
   );
 }
-
+const commonTopBarOptions= {
+  tabBarStyle:{
+    borderBottomColor:'#F4F1F1',
+    borderBottomWidth:1,
+    height:48,
+  },
+  tabBarIndicatorStyle: { 
+    backgroundColor: '#326972' 
+  },
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -63,12 +73,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    height:"20%"
   },
   headerImage: {
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color:"black"
+    fontSize: 11,
+    fontFamily:"inter",
+    fontWeight: "500",
+    color:"black",
+    margin:5
   },
 });

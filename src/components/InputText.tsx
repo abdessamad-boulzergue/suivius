@@ -34,11 +34,10 @@ const SuiviInputText=({value,placeholder,title,icon,style,editable,keyboardType 
 
     const updateText=(text:string)=>{
         setTextValue(text);
-        onChangeText(text);
     }
 
     return(
-        <View>
+        <View key={title}>
             {title &&
             <Text style={titleStyle}>{title}</Text>
             }
@@ -48,6 +47,7 @@ const SuiviInputText=({value,placeholder,title,icon,style,editable,keyboardType 
                     placeholder={placeholder}
                     value = {textValue}
                     keyboardType={keyboardType}
+                    onTextInput={event=>onChangeText(textValue)}
                     onChangeText={txt=>updateText(txt)}
                     editable={editable}
                 />

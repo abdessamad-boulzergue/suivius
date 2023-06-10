@@ -2,53 +2,59 @@ import { View,Text, ScrollView } from "react-native";
 import SuiviInputText from "../components/InputText";
 import SButton from "../components/common/SButton";
 import { Project } from "../database/dao/ProjectDao";
-import { useDao } from "../stores/daoStores";
 import {useState,useEffect} from 'react'
 import { Localisation } from "../database/dao/LocalisationDao";
+import { useDao, useStores } from "../stores/context";
+import { projectObjectStore } from "../stores/objectsStore";
+import { WorkDetails } from "../database/types";
+import TssEditionValidation from "../components/TssEditionValidation";
+import { observer } from "mobx-react-lite";
 
-export default function  TravauxComponent({route}:any){
-    const detailsWork=[
-        "Chambre de source",
-        "Tranché mecanisée",
-        "tranché traditionnelle",
-        "Percement",
-        "PEHD 40",
-        "chambre",
-        "Flexible armé",
-        "TAG",
-        "PVC",
-        "Boite Jonction 144 FO",
-        "Cable 144 FO",
-        "Cable 24 FO",
-        "Emplacement ODF",
-        "Install de l'ODF"
-    ]
-    const{localisationDao} = useDao();
-    const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
+const TravauxComponent=observer(({route,navigation}:any)=>{
+    
+   const{localisationDao,projectWorkDetailsDao} = useDao();
+   const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
    const project = route.params?.project;
+
    useEffect(()=>{
     localisationDao.getByIdProject(project.id).then(localiz=>{
         setLocalisation(localiz);
-        console.log(localiz)
     })
    },[])
 
+   const getWorkValue = (infoId:number)=>{
+     const idx = projectObjectStore.getProjectsWorkDetails(project).findIndex(info=>info.infoId===infoId);
+     return (idx!=-1) ? projectObjectStore.getProjectsWorkDetails(project)[idx].value : "";
+   }
+
+   const setWorkValue = async(info:WorkDetails,newValue:string)=>{
+        projectObjectStore.setProjectsWorkDetails(project,info,newValue)
+        const wdt = await projectWorkDetailsDao.get(project.id,info.id)
+        if(wdt){
+            projectWorkDetailsDao.update({...wdt , value:newValue})
+        }else{
+            projectWorkDetailsDao.add({id_project:project.id, id_info : info.id,value:newValue,title:info.title});
+        }
+    }
+
     return(
-        <ScrollView style={{padding:15}}>
+        <ScrollView style={{padding:10,marginBottom:10}}>
             {
-                detailsWork.map(title=>{
-                    return             <SuiviInputText style={{color:'#2F3437'}} title={title} />
+                projectObjectStore.detailsWork.map(wdt=>{
+                    return <SuiviInputText 
+                    onChangeText={(txt:string)=>setWorkValue(wdt,txt)}
+                    key={wdt.id} style={{color:'#2F3437'}}
+                    title={wdt.title} 
+                    value={getWorkValue(wdt.id)} />
                 })
             }
-            <View style={{flexDirection:"row",justifyContent:"space-between"}}>
-
-            <SButton style={{ color:"#E55959",margin:15,alignSelf:"center", backgroundColor:"transparent", width:"40%", }} title="Bloquer" 
-                            onPress={()=>{}}>
-                        </SButton>
-            <SButton style={{ alignSelf:"center", width:"50%", }} title="Envoyer" 
-                     onPress={()=>{}}></SButton>
-                     </View>
+            <TssEditionValidation
+            navigation={navigation}
+                 project={project}
+                />
         </ScrollView>
     )
 
-}
+})
+
+export default TravauxComponent;

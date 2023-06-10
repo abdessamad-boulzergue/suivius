@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import SuiviInputDate from '../components/InputDate';
 import InputSearch from '../components/InputSearch';
 import { Project } from '../database/dao/ProjectDao';
-import { useDao } from '../stores/daoStores';
+import { useDao } from '../stores/context';
 import { Work } from '../database/dao/WorkDao';
 import { TABLES } from '../database/dao/constants';
 import { format } from 'date-fns';

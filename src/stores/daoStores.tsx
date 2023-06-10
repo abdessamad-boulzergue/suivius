@@ -14,6 +14,12 @@ import ArticleDao from '../database/dao/ArticleDao';
 import WorkToolsDao from '../database/dao/WorkToolsDao';
 import DocumentDao from '../database/dao/DocumentDao';
 import StaffDao from '../database/dao/StaffDao';
+import UserDao from '../database/dao/UserDao';
+import StepStatusDao from '../database/dao/StepStatusDao';
+import HistoryDao from '../database/dao/HistoryDoa';
+import { RootStore } from './context';
+import TssDao from '../database/dao/TssDao';
+import ProjectWorkDetailsDao from '../database/dao/ProjectWorkDetailsDao';
 
 
 export class RootDaoStore {
@@ -21,6 +27,7 @@ export class RootDaoStore {
     projectDao: ProjectDao;
     autorisationDao : AutorisationDao;
     stepDao :StepDao;
+    stepStatusDao :StepStatusDao;
     localisationDao:LocalisationDao;
     workDao : WorkDao;
     articleConsumeDao:ArticleConsumeDao
@@ -29,10 +36,15 @@ export class RootDaoStore {
     workToolsDao : WorkToolsDao
     documentDao:DocumentDao
     staffDao: StaffDao
-  constructor(private database :Database) {
-    this.projectDao = new ProjectDao(database);
+    userDao: UserDao
+    historyDao:HistoryDao
+    tssDao:TssDao
+    projectWorkDetailsDao:ProjectWorkDetailsDao
+  constructor(private database :Database, private stores:RootStore) {
+    this.projectDao = new ProjectDao(database,stores);
     this.autorisationDao = new AutorisationDao(database);
     this.stepDao = new StepDao(database);
+    this.stepStatusDao = new StepStatusDao(database);
     this.localisationDao = new LocalisationDao(database);
     this.staffDao = new StaffDao(database)
     this.workDao = new WorkDao(database,this.staffDao);
@@ -41,7 +53,10 @@ export class RootDaoStore {
     this.articleDao = new ArticleDao(database);
     this.articleConsumeDao = new ArticleConsumeDao(database,this.articleDao);
     this.documentDao = new DocumentDao(database);
-
+    this.userDao = new UserDao(database,this);
+    this.historyDao = new HistoryDao(database);
+    this.tssDao = new TssDao(database);
+    this.projectWorkDetailsDao = new ProjectWorkDetailsDao(database);
   }
   getDatabase(){
     return this.database;
@@ -50,26 +65,3 @@ export class RootDaoStore {
   }
 }
 
-export const rootDao = new RootDaoStore(new Database());
-
-const StoreDaoContext = createContext<RootDaoStore>(rootDao);
-
-export const StoreDaoProvider = ({children}: any) => {
-    
-  useEffect(() => {
-    AsyncStorage.getItem('db_inited').then(
-            action((data: any) => {
-              if (!data) {
-                rootDao.getDatabase().initDB();
-              }
-            }),
-          );
-  }, []);
-
-
-  return (
-    <StoreDaoContext.Provider value={rootDao}>{children}</StoreDaoContext.Provider>
-  );
-};
-
-export const useDao = () => useContext(StoreDaoContext);

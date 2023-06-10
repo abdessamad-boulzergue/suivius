@@ -23,7 +23,6 @@ export default class AutorisationDao {
     async addToPoject(autorisation:Autorisation):Promise<void>{
         return this.database.insert(this.TABLE_NAME,{...autorisation})
         .then(result=>{
-            console.log("insert document : ", result);
         }).catch(err=>{
             console.error(err);
         })
@@ -31,7 +30,6 @@ export default class AutorisationDao {
     updateDate(id_project:number , fileds:{}){
         this.database.update(this.TABLE_NAME,fileds,{id_project:id_project})
         .then(result=>{
-            console.log("update : ", result);
         }).catch(err=>{
             console.error(err);
         })

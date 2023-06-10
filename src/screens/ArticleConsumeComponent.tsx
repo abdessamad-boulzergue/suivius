@@ -1,78 +1,148 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Text,  StyleSheet,  SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView
+    Text,  StyleSheet, TextInput, FlatList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView
 } from 'react-native';
 
-import SuiviInputText from '../components/InputText';
-import SuiviInputDate from '../components/InputDate';
+
 import { Project } from '../database/dao/ProjectDao';
-import { useDao } from '../stores/daoStores';
+import { useDao, useStores } from '../stores/context';
 import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
+import { observer } from 'mobx-react-lite';
+import { projectObjectStore } from '../stores/objectsStore';
+import { BoqDto } from '../services/types';
+import APDEditionValidation from '../components/APDEditionValidation';
+import { ModalList, ModalListItem } from '../components/ModalList';
 
 
 
-const ArticleConsumeComponent =({route,navigation}:any) => {
+const ArticleConsumeComponent =observer(({route,navigation}:any) => {
 
-    const  project:Project = route.params.project;
-    const {articleConsumeDao} = useDao();
-    const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
+    const  [project,setProject] = useState<Project>(route.params.project);
+    const [articles,setArticles] = useState<ModalListItem[]>([]);
+    const [modalVisible,setModalVisible] = useState<boolean>(false);
+    const {rightsStore} =useStores();
+    const {articleConsumeDao,projectDao} = useDao();
+    const [pages, setPages] = useState<ArticleConsume[]>([]);
 
+   
     useEffect(()=>{
-        getArticleConsumes();
+       
+      const data:BoqDto[]  = projectObjectStore.getProjectsBOQ(project);
+      console.log("data BoqDto -------------------- ",data)
+       setPages(data.map(boq=>{
+        return {id_article:boq.articleId,quantity:boq.quantity,id_project:project.id}
+       }));
+       setArticles(projectObjectStore.articles.map(art=>{ return {id:art.id,title:art.title}}));
+      // getArticleConsumes();
     },[])
     const  getArticleConsumes= () => {
         articleConsumeDao.getByIdProject(project.id).then(
             (consumes)=>{
-                console.log("consumes >+++>>" , consumes)
-                setPages([{title:"", data:consumes}]);
+                let data = [...pages];
+                consumes.forEach(cons=>{
+                  const idx = data.findIndex(ac=>ac.id_article==cons.id_article);
+                  if(idx!=null){
+                    data[idx].quantity = cons.quantity
+                  }else{
+                    data.push(cons);
+                  }
+                })
+                setPages(data);
             }
         );
     }
-    const updateQuantity =(quantity:number,id_article:number)=>{
-    
-        articleConsumeDao.updateQuantity(project.id,id_article,quantity)
+    const searchArticles=(text:string)=>{
+      setModalVisible(true);
     }
-  const renderSeparator = () => {
-    return <View style={styles.separator} />;
-  };
-
-
+   const  onCloseArticleModal = (items:ModalListItem[])=>{
+    items.filter(item=> pages&& pages.findIndex(ac=>ac.id_article===item.id)==-1)
+    .forEach(item=>{
+      setPages([  ...pages,  {id_article:item.id,id_project:project.id, quantity:0}  ]);
+    })
+    setModalVisible(false)
+    }
+    const getTitle =(item:ArticleConsume)=>{
+      return articles.filter(art=>art.id == item.id_article).map(art=>art.title).join("");
+    }
+    const updateQuantity =(item:ArticleConsume,quantity:number)=>{
+       
+       const index = pages.findIndex(ac=>ac.id_article===item.id_article)
+        setPages([...pages.slice(0, index),
+          {id_article:item.id_article,id_project:project.id, quantity:quantity} ,
+          ...pages.slice(index + 1),
+      ]);
+        articleConsumeDao.updateQuantity(project.id,item.id_article,quantity)
+    }
+      const renderSeparator = () => {
+        return <View style={styles.separator} />;
+      };
+      const renderSectionHeader = ({ section }:any) => (
+        <View style={styles.header}>
+          <Text  style={styles.hTitle} >Article</Text>
+          <Text  style={styles.hUnite}>Unité</Text>
+          <Text  style={styles.hQte}>Q.R</Text>
+        </View>
+      );
         return (
-            <View style={{flex: 1,}}>
-                <View style={styles.dropdownContainer}>
-                    <Text style={styles.label}>rechercher collaborateur :</Text>
-                        <InputSearch placeholder="recherher un collaborateur"></InputSearch>
-                </View>
+            <View style={{flex: 1,paddingTop:5}}>
+                <ModalList data={articles} visible={modalVisible} onClose={onCloseArticleModal} ></ModalList>
 
-                <SectionList sections={pages}
-                 renderItem={({item}:{item: ArticleConsume}) =>{ 
+                <View style={styles.dropdownContainer}>
+                        <InputSearch onSearch={searchArticles} 
+                            value="" placeholder="recherher un collaborateur"></InputSearch>
+                </View>
+                <FlatList data={pages} 
+                 renderItem={({item}) =>{ 
                     
                     return(
-                        <View style ={styles.listItem}>
-                            <View style={{width:"25%"}}>
-                                <Text style ={styles.listItemTitle}>{(item.article?.title)}</Text>
-                            </View>
-                            <View style={{width:"30%"}}>
-                                 <SuiviInputText key={item.quantity} onChangeText={(txt:number)=>updateQuantity(txt,item.id_article)} keyboardType='numeric' editable={true} value={item.quantity+""} title="Qte"  style={styles.inputDate}></SuiviInputText>
-                             </View>
-                        </View>
+                        <View style={styles.listItem}>
+                          <Text  style={styles.itemTitle} >{getTitle(item)}</Text>
+                          <Text  style={styles.itemUnite}>Unité</Text>
+                          <TextInput
+                            style={styles.inputDate}
+                              value = {item.quantity.toString()}
+                              keyboardType='numeric'
+                              onChangeText={txt=>updateQuantity(item,parseFloat(txt))}
+                              editable={true}
+                          />
+                      </View>
                     )
                 }}
-                 renderSectionHeader={({section}) => {
-                                return(section.title?  (<Text style ={styles.sectionTitle}></Text>) : null)
-                            }}
+                
                 keyExtractor={(item, index) => index.toString()}
                
                 ItemSeparatorComponent={renderSeparator}
 
                  />
+                  <APDEditionValidation
+                  navigation={navigation}
+                  project={project}
+                />
             </View>
         );
     
-}
+})
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
+  hTitle:{
+    alignSelf:'center',
+    marginLeft:20,
+    width:'50%'
+  },
+  hUnite:{
+    alignSelf:'center',
+    width:'30%'
+  },
+  hQte:{
+    alignSelf:'center',
+    width:'20%'
+  },
+  header:{ 
+    backgroundColor: '#326972',
+     height: 35,
+     flexDirection:'row'
+    },
     dropdown: {
         borderWidth: 1,
         borderColor: '#999',
@@ -84,10 +154,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc',
       },
       inputDate:{
+        flex:1,
+        alignSelf:'center',
+        color:'#000000',
+        width: 30,
+        height:35,
         borderColor:"#cacaca",
-        backgroundColor:"transparent",
         borderWidth:0.3,
-        titleColor:"#aeaeca"
     },
       dropdownContainer: {
         margin: 20,
@@ -126,16 +199,24 @@ const styles = StyleSheet.create({
     sectionTitle:{
         fontSize:30
     },
-    listItemTitle:{
+    itemTitle:{
         color:"#4a545a",
         fontSize:15,
+        alignSelf:'center',
+        marginLeft:20,
+        width:'50%'
     },
+    itemUnite:{
+      color:"#4a545a",
+      fontSize:15,
+      alignSelf:'center',
+       width:'30%'
+  },
+
     listItem:{
-    flex:1,
-     flexDirection:'row',
-     padding:10,
-     alignItems: 'center',
-     justifyContent:"space-between"
+      backgroundColor: '#FFFFFF',
+      height: 49,
+      flexDirection:'row'
     },
     listItemImage:{
         width:'98%',

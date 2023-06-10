@@ -5,16 +5,19 @@ import {makeAutoObservable, runInAction, autorun, action} from 'mobx';
 import { API_URL } from '../config';
 import { asyncStorageSetItem } from '../utils/cache/storage';
 import { httpPost } from '../network/httpService';
-
+import UserManager from '../models/user';
+import { User } from '../database/types';
+ 
 export interface InitialDataProps {
   firstName: string;
   lastName: string;
   email: string;
 }
 export class LoginStore {
-
+   
     stores: RootStore;
     userToken: string = '';
+    loggedUserManager!:UserManager
     isFetching :boolean = false;
     loading:boolean = false;
     refreshToken: string = '';
@@ -50,7 +53,7 @@ export class LoginStore {
 
     getRefreshToken = async () => {
         try {
-          const response = await httpPost(
+          const response = await httpPost<{data:{token:string,refreshToken:str}}>(
             this.stores.apiStore.defaultUrl + API_URL.refreshTokenURL,
             {},
             this.refreshToken,
@@ -75,6 +78,25 @@ export class LoginStore {
             this.loading = false;
             });
     };
+
+    regularLogin = async ({username, password}:{username :string, password:string}) => {
+      const body = {username, password};
+      
+      const user :User | null = await this.stores.daoStores.userDao.getUserByName(username)
+      console.log("USER : " , user,"  password ", password , "  ", typeof password , typeof user?.password)
+      if(user && user.password === password){
+        this.loggedUserManager = new UserManager(user);
+        const {rightsStore} = this.stores;
+        rightsStore.setUser(user);
+       
+        this.loginHandler({data:{token:"test"}})
+      }
+    };
+    logout(): void {
+      runInAction(() => {
+        this.userToken = '';
+    });
+    }
 
     loginHandler = async (response: any) => {
         runInAction(() => {

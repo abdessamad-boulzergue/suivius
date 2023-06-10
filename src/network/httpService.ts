@@ -2,6 +2,8 @@
 import {rootStore} from '../stores/context';
 import {API_URL} from '../config';
 import axios from 'axios';
+import { Alert } from 'react-native';
+import { showError } from '../components/toast';
 
 const http = axios.create();
 
@@ -17,6 +19,8 @@ http.interceptors.response.use(undefined, async( error :any) => {
     ) {
       return Promise.reject(error);
     }
+
+    
     await rootStore.loginStore.getRefreshToken();
 
     if (rootStore.loginStore.userToken) {
@@ -29,21 +33,52 @@ http.interceptors.response.use(undefined, async( error :any) => {
       });
     }
   }
+
+  if (!error.response) {
+    // Network error
+    console.error('Network Error:', error.message);
+    showError("Erreur de connexion","la connexion au sereur à echoué");
+    throw new Error('Network Error. Please check your internet connection.');
+  } else {
+    // Server error
+    showError("Erreur de connexion","la connexion au sereur à echoué");
+    console.error('Server Error:', error.response.status, error.response.data);
+    throw new Error('An error occurred. Please try again later.');
+  }
+
+
   return Promise.reject(error);
 });
 
-export const httpGet = async (url: string, token: string | null) => {
-  return await http.get(url, {
+export const httpGet = async <T>(url: string, token: string | null) => {
+  console.log("httpGet : ", url)
+  return await http.get<T>(url, {
     headers: {
-      'Accept-Encoding': 'gzip, deflate, br',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
-      Authorization: token,
     },
+  }).then(response=>  response.data)
+  .catch(err=>{
+     console.log("http get error : " , err)
   });
 };
 
-export const httpPost = async (url: string, body: any, token: string) => {
-  return await http.post(url, body, {
+export const get= async(url:string,token: string | null)=>{
+  return http.get(url, {
+      method: 'GET',
+      withCredentials: true,
+      headers:{
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+      },
+  }).catch(err=>{
+    console.log("http get error : " , err)
+ });
+}
+
+export const httpPost = async<T>(url: string, body: any, token: string) => {
+  console.log("httpPost : ", url)
+  return await http.post<T>(url, body, {
     headers: {
       'Accept-Encoding': 'gzip, deflate, br',
       'Content-Type': 'application/json',
@@ -61,8 +96,33 @@ export const httpDelete = async (url:string, token:string) => {
     },
   });
 };
+export const sendFileToServer = async (url:string,formData:FormData) => {
+  try {
+    const fileUri = 'file:///data/user/0/com.suivius/cache/Camera/4b3f3f6a-a26b-4eee-98a8-f5c772417700.jpg'; // Replace with the actual file URI
 
+    const response = await http.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: 'your_token', // Replace with the authorization token if required
+      },
+      onUploadProgress: (progressEvent:any) => {
+        const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        console.log(`Upload Progress: ${progress}%`);
+      },
+    });
+
+    console.log('Upload response:', response.data);
+  } catch (error:any) {
+    console.log('File upload error:', error);
+    if (error.response) {
+      console.log('Response Data:', error.response.data);
+      console.log('Response Status:', error.response.status);
+      console.log('Response Headers:', error.response.headers);
+    }
+  }
+};
 export const httpUpload = async (url:string, body:any, token:string, onProgress:Function) => {
+  console.log(url)
   return await http.post(url, body, {
     headers: {
       Accept: 'application/json',

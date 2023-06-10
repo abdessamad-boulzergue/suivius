@@ -6,7 +6,7 @@ import {
 import SuiviInputText from '../components/InputText';
 import SuiviInputDate from '../components/InputDate';
 import { Project } from '../database/dao/ProjectDao';
-import { useDao } from '../stores/daoStores';
+import { useDao } from '../stores/context';
 import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
 import WorkToolsUsageDao from '../database/dao/WorkToolsUsageDao';

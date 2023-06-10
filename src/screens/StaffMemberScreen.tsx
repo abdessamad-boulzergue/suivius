@@ -15,7 +15,7 @@ import { Picker } from '@react-native-picker/picker';
 
 import { inwi,liked,loved} from '../assets'
 import { StaffMember } from '../database/dao/StaffDao';
-import { useDao } from '../stores/daoStores';
+import { useDao } from '../stores/context';
 import EmployeeForm from '../components/staffForm';
 
 export default function StaffMemberScreen() {

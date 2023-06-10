@@ -1,5 +1,5 @@
 import React,{useEffect, useState} from 'react';
-import { StyleSheet, Text, Button,View,TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, Button,View,Alert } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 
@@ -9,11 +9,15 @@ import { RouteProp } from '@react-navigation/native';
 import { Project } from '../database/dao/ProjectDao';
 
 import { Localisation } from '../database/dao/LocalisationDao';
-import { useDao } from '../stores/daoStores';
-import MapView, { Marker,LatLng } from 'react-native-maps';
+import { useDao } from '../stores/context';
+import MapView, {Marker,LatLng,Polyline} from 'react-native-maps';
+import Geolocation from 'react-native-geolocation-service';
+
 import { observer } from "mobx-react-lite";
 import SButton from '../components/common/SButton';
 import { projectObjectStore } from '../stores/objectsStore';
+import { ETUDE_STATUS, ROUTES } from '../constants';
+import { showError } from '../components/toast';
 type RootStackParamList = {
     InfoProjectScreen: { project: Project }; 
 };
@@ -23,7 +27,7 @@ type DestinationScreenRouteProp = RouteProp<RootStackParamList, 'InfoProjectScre
 type Props = {
   route: DestinationScreenRouteProp;
 };
-const  LocalisationProjectScreen = observer(({route}:any) => {
+const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
     const {projectDao} = useDao();
     const [mapReady, setMapReady] = useState(false);
     const [position,setPosition]=useState<LatLng|null>(null)
@@ -36,27 +40,83 @@ const  LocalisationProjectScreen = observer(({route}:any) => {
     const{localisationDao} = useDao();
     const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
     const [project, setProject] = useState<Project>(route.params?.project)
-    console.log("project ======> ",project.id_step_status)
-   useEffect(()=>{
-    localisationDao.getByIdProject(project.id).then(localiz=>{
-        setLocalisation(localiz);
-        setRegion({
-            latitude: localiz.lat,
-            longitude: localiz.lng,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-        })
+    const [currentPosition, setCurrentPosition] = useState<LatLng|null>(null);
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-        setPosition({ latitude: localiz.lat, longitude:localiz.lng})
-    })
+   useEffect(()=>{
+    watchPosition();
+      const localisation =projectObjectStore.getProjectLocalisation(project)
+      if(localisation){
+            setLocalisation({
+                addresse:localisation?.address,
+                province:localisation?.province,
+                region:localisation?.region,
+                lat:localisation?.lat,
+                lng:localisation?.lng,
+                id:0,
+                site:localisation?.site
+            })
+            setRegion ({
+                latitude: localisation?.lat,
+                longitude: localisation?.lng,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            });
+            setPosition({ latitude: localisation.lat, longitude:localisation.lng})
+        }
+
    },[])
 
-   const updateProjectStepStatus=()=>{
-    projectDao.nextStep(project.id).then(projectUpdate=>{
-        console.log("updateProjectStepStatus",projectUpdate )
-        setProject(projectUpdate)
-        projectObjectStore.updateProject(projectUpdate);
-    });
+
+   const watchPosition =( )=>{
+     Geolocation.watchPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    setCurrentPosition({ latitude, longitude });
+                },
+                error => Alert.alert("Geolocation error ",error.message),
+                { enableHighAccuracy: true, interval:3000 }
+            );
+   }
+   const getLocalisation =(onSuccess:(latLng:LatLng)=>void)=>{
+      Geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    setCurrentPosition({ latitude, longitude });
+                    onSuccess( position.coords)
+                },
+                error => Alert.alert("Geolocation error ",error.message),
+                { enableHighAccuracy: true, timeout:10000 }
+            );
+   }
+   const startStudy=()=>{
+    projectDao.startStudy(project.id)
+    .then(response=>{
+        projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
+        setProject(  {...project, id_step_status:response.stepStatusId});
+    })
+   }
+
+   const startTssEditionEdition=()=>{
+        getLocalisation((latLng)=>{
+            projectDao.startTssEditionEdition(project.id)
+            .then(response=>{
+                projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
+                setProject(  {...project, id_step_status:response.stepStatusId});
+            })
+        })
+   }
+   const xstartTssEditionEdition=async ()=>{
+    getLocalisation((latLng)=>{
+        projectDao.toStepStatus(ETUDE_STATUS.EDITION_TSS,project.id)
+        .then(projectUpdate=>{
+            setProject(projectUpdate)
+            projectObjectStore.updateProject(projectUpdate);
+        })
+    })
+    
+
+
    }
 
    return(
@@ -81,34 +141,36 @@ const  LocalisationProjectScreen = observer(({route}:any) => {
                     <Text style={styles.text}>Type de prestation</Text>
                     <Text style={styles.text}>propre</Text>
                 </View>
+                
                 <View style={{flex:1,marginTop:10,marginBottom:20 }}>
                     <MapView
                         style={{ flex: 1}}
                         region={region}
                         onMapReady={() => setMapReady(true)}
                     >
-                         {mapReady && position &&(
-                            <Marker
-                                coordinate={position}
-                            />
-                         )}
+                        {position && <Marker coordinate={position} />}
+                        {currentPosition &&<Marker  coordinate={currentPosition} /> }
+
+                         {currentPosition&& position &&
+                          <Polyline coordinates={[currentPosition, position]}  strokeWidth={2}/>
+                        }
+
                     </MapView>
                 </View>
                 <View >
                 <View style={{flexDirection:"row",justifyContent:"space-between"}}>
                     {project.id_step_status === 1 &&
-                     <SButton style={{ alignSelf:"flex-start", width:"50%", }} title="demarer" 
-                     onPress={()=>updateProjectStepStatus()}></SButton>
+                     <SButton style={{ alignSelf:"flex-start", width:"50%", }} title="demarrer" 
+                     onPress={startStudy}></SButton>
                     }
                     {project.id_step_status !== 1 &&
                         <SButton style={{ color:"#E55959",alignSelf:"flex-end", backgroundColor:"transparent", width:"40%", }} title="Bloquer" 
-                        onPress={()=>{}}>
-
+                                onPress={()=>{ navigation.navigate(ROUTES.BLOCAGE,{project:project})}}>
                         </SButton>
                     }
                     {project.id_step_status === 2 &&
                         <SButton style={{ alignSelf:"flex-start", width:"50%", }} title="arriver" 
-                            onPress={()=>updateProjectStepStatus()}>
+                            onPress={()=>startTssEditionEdition()}>
                         </SButton>
                     }
                 </View> 

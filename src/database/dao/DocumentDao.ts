@@ -1,12 +1,9 @@
 import Database, { ProjectRepository } from "..";
+import { Document, DocumentProject } from "../types";
 import { TABLES } from "./constants";
 
 
-export interface Document{
-    id?:number,
-    path:string,
-    type:string
-}
+
 
 export default class DocumentDao {
     constructor(private database :Database){}
@@ -26,6 +23,28 @@ export default class DocumentDao {
         })
     })
     }
+
+    getByIdProject(id_project:number):Promise<Array<DocumentProject>>{
+        return new Promise((resolve, reject) => {
+               this.database.selectFromTable(TABLES.DocumentProject.name,[],{id_project:id_project})
+               .then(async (resultSet)=>{
+                   const docs:Array<DocumentProject>=[];
+                   for(let i=0 ; i<resultSet.length ; i++){
+                    let docProject =resultSet.item(i)
+                    const docResult= await this.database.selectFromTable(TABLES.Document.name,[],{id:docProject.id_document})
+                    if(docResult.length>0)
+                        docs.push({
+                            document:docResult.item(0),
+                            type:docProject.type
+                        })
+                   }
+                    resolve(docs);
+               }).catch(error=>{
+                   reject(error);
+               });
+       });
+   }
+
     getByIdProjectAndType(id_project:number,type:string):Promise<Array<Document>>{
         return new Promise((resolve, reject) => {
                this.database.selectFromTable(TABLES.DocumentProject.name,[],{id_project:id_project,type:type})
@@ -37,12 +56,10 @@ export default class DocumentDao {
                     if(docResult.length>0)
                         docs.push({
                             id:docProject.id_document,
-                            path:docResult.item(0).path,
-                            type:""
+                            ...docResult.item(0)
                         })
                    }
-                   console.log("document Project  **** docs : ", docs);
-                   resolve(docs);
+                    resolve(docs);
                }).catch(error=>{
                    reject(error);
                });

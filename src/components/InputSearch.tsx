@@ -17,7 +17,7 @@ const InputSearch=({value,placeholder,onSearch}:any)=>{
                 placeholder={placeholder}
                 value = {textValue}
             />
-          <Button onPress={()=>onSearch(textValue)}> <Icon size={20} name="search"/> </Button>
+          <Button style={styles.searchBtn} onPress={()=>onSearch(textValue)}> <Icon size={20} name="search"/> </Button>
         </View>
     )
 
@@ -40,20 +40,12 @@ const styles = StyleSheet.create({
         color:"#000"
 
     },
-    ImageStyle: {
-        padding: 10,
-        margin: 5,
-        height: 25,
-        width: 25,
-        resizeMode: 'stretch',
-        alignItems: 'center',
-    },
     container: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 0.5,
         height: 45,
         borderRadius: 15,
-        margin: 15,
+        margin: 10,
     },
 });

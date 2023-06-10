@@ -1,4 +1,4 @@
-import React from 'react';
+import React ,{useState,useEffect} from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import DrawerContent from '../navigation/DrawerContent';
@@ -7,12 +7,22 @@ import { TouchableOpacity ,Image} from 'react-native';
 import { drawerOpen } from '../assets';
 import HomeScreen from '../screens/HomeScreen';
 import ProjectScreen from '../screens/ProjectsScreen';
-import { ROUTES } from '../constants/routes';
+import { ROUTES } from '../constants';
 import InfoProjectScreen from '../screens/InfoProjectScreen';
-import ActivityReportScreen from '../screens/ActivityReportScreen';
+import EtudeAPDScreen from '../screens/EtudeAPDScreen';
 import StaffMemberScreen from '../screens/StaffMemberScreen';
 import LocalisationProjectScreen from '../screens/LocalisationProjectScreen';
 import EtudeReportScreen from '../screens/EtudeReportScreen';
+import BlocageComponent  from '../components/BlocageModal';
+import { useStores } from '../stores/context';
+import { loadArticles, loadProjectsDocumentForUser, loadReferences, loadUserPermissions, loadUserProjects, loadWorkInfos } from '../services';
+import { projectObjectStore } from '../stores/objectsStore';
+import LoadingScreen from '../screens/LoadingScreen';
+import { dtosToSuiviePermission } from '../services/mappers';
+import RejectModal from '../components/RejectModal';
+import StaffActivityComponent from '../screens/StaffActivityComponent';
+import LoginScreen from '../screens/auth/LoginScreen';
+import WorkToolsScreen from '../screens/WorkToolsScreen';
 
 const Stack = createStackNavigator();
 
@@ -31,7 +41,59 @@ function HomeDrawer() {
 }
 
 const HomeStack = ({ navigation }:any) => {
-  return (
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isReferencesLoad, setReferencesLoad] = useState(false);
+  const [isProjectLoad, setProjectLoad] = useState(false);
+  const [isWorkInfoLoad, setWorkInfoLoad] = useState(false);
+  const [isPermissionLoad, setPermissionLoad] = useState(false);
+  const {loginStore ,rightsStore,isLoadingData,startLoadingData} = useStores();
+  const {  userToken} = loginStore;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+             const projectsResponse=  loadUserProjects(rightsStore.currentUser.id);
+             const referencesResponse  = loadReferences()
+             const infosResponse=  loadWorkInfos()
+             const docContentResponse=loadProjectsDocumentForUser(rightsStore.currentUser.id)
+             const permissionsResponse=loadUserPermissions(rightsStore.currentUser.id)
+             const articleResponse = loadArticles();
+             const [projects,references,infos,permissions,docContent,articles] = await Promise.all(
+                                                                          [projectsResponse,referencesResponse,
+                                                                          infosResponse,permissionsResponse,docContentResponse,
+                                                                          articleResponse
+                                                                        ]);
+              
+             projectObjectStore.setProjectsDto(projects || []) 
+              if (references) projectObjectStore.setReferences(references)
+              console.log("infos " , infos)
+              projectObjectStore.dtoToWorkInfo(infos||[]) 
+              rightsStore.setPermissions(dtosToSuiviePermission(permissions||[]))
+              projectObjectStore.setProjectsDocumentForUser(docContent||[])
+              projectObjectStore.setArticles(articles||[]);
+              setIsLoading(false);
+            } catch (error) {
+              console.log('Error:', error);
+              setIsLoading(false); // Handle error and set isLoading to false
+            }
+          }
+          fetchData();
+        }, []);
+
+  const allDataLoading =()=>{
+    console.log(!isWorkInfoLoad , !isPermissionLoad , !isReferencesLoad , !isProjectLoad)
+    return false && !isWorkInfoLoad && !isPermissionLoad && !isReferencesLoad && !isProjectLoad
+  }
+
+return (
+  <>
+  {isLoading ? (
+ 
+      <LoadingScreen></LoadingScreen>
+  
+  ) : 
+  (
+
     <Stack.Navigator   initialRouteName={ROUTES.PROJECTS}
     screenOptions={{
         headerStyle: { backgroundColor: '#326972' },
@@ -39,6 +101,16 @@ const HomeStack = ({ navigation }:any) => {
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
+     <Stack.Screen
+        options={{headerShown: false, headerTitle: 'LoginScreen'}}
+        component={LoginScreen}
+        name={ROUTES.LOGIN}
+      />
+     <Stack.Screen
+        options={{headerShown: false, headerTitle: 'Activités'}}
+        component={WorkToolsScreen}
+        name={ROUTES.WORK_TOOLS}
+      />
 
     <Stack.Screen
       name={ROUTES.HOME}
@@ -86,10 +158,31 @@ const HomeStack = ({ navigation }:any) => {
       }}
     />
     <Stack.Screen
+      name={ROUTES.BLOCAGE}
+      component={BlocageComponent}
+      options={{
+        title: 'details blocage'
+      }}
+    />
+    <Stack.Screen
+      name={ROUTES.REJECT}
+      component={RejectModal}
+      options={{
+        title: 'motifs de rejet'
+      }}
+    />
+    <Stack.Screen
       name={ROUTES.ETUDE_REPORT_SCREEN}
       component={EtudeReportScreen}
       options={{
         title: 'Rapport d\'etude'
+      }}
+    />
+    <Stack.Screen
+      name={ROUTES.STAFF_ACTIVITY_SCREEN}
+      component={StaffActivityComponent}
+      options={{
+        title: 'staff'
       }}
     />
     <Stack.Screen
@@ -101,13 +194,14 @@ const HomeStack = ({ navigation }:any) => {
     />
     <Stack.Screen
       name={ROUTES.ACTIVITY_REPORT}
-      component={ActivityReportScreen}
+      component={EtudeAPDScreen}
       options={{
         title: "rapport d'activité"
       }}
     />
   </Stack.Navigator>
-
+  )}
+  </>
   );
 };
 

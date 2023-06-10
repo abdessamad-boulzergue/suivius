@@ -8,6 +8,9 @@ export const TABLES={
             NBR_ADD_HOUR:{name:"nbr_add_hour", type:"string"}
         }
     },
+    ProjectWorkDetails:{
+        name:"ProjectWorkDetails",
+    },
     Document:{
         name:"Document",
         fields:{
@@ -16,7 +19,54 @@ export const TABLES={
             DATA:{name:"data", type:"string"}
         }
     },
+    Tss:{
+        name:"Tss",
+        fields:{
+            ID:{name:"project_id", type:"number"}
+        }
+    },
+    History:{
+        name:"History", 
+    },
+    User:{
+        name:"Users",
+        fields:{
+            ID:{name:"id", type:"number"},
+            USERNAME:{name:"username", type:"string"},
+            PASSWORD:{name:"password", type:"string"}
+        }
+    },
     
+    StepUserPermission:{
+        name:"StepUserPermission",
+        fields:{
+            ID_USER:{name:"id_user", type:"number"},
+            ID_STEP:{name:"id_step", type:"number"},
+            ID_PERMISSION:{name:"id_permission", type:"number"}
+        }
+    },
+    Step:{
+        name:"Step",
+        fields:{
+            ID:{name:"id", type:"number"},
+            TITLE:{name:"title", type:"string"},
+        }
+    },
+    
+    StepStatus:{
+        name:"StepStatus",
+        fields:{
+            ID:{name:"id", type:"number"},
+            TITLE:{name:"title", type:"string"},
+        }
+    },
+    Permission:{
+        name:"Permission",
+        fields:{
+            ID:{name:"id", type:"number"},
+            TITLE:{name:"title", type:"string"},
+        }
+    },
     DocumentProject:{
         name:"DocumentProject",
         fields:{
@@ -30,6 +80,12 @@ export const TABLES={
         fields:{
             NBR_HOUR:{name:"nbr_hour", type:"string"},
         }
+    },
+    PROJECT:{
+        name:"PROJECT",
+    },
+    ProjectAffectation:{
+        name:"ProjectAffectation",
     },
     Autorisation:{
         name:"AUTORISATION",

@@ -3,7 +3,7 @@ import { StyleSheet, Text, Button,View,TouchableOpacity } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import AutorizationScreen from './AutorizationScreen';
-import EtudeComponent from './EtudeScreen';
+import EtudeComponentSummary from './EtudeComponentSummary';
 import TravauxComponent from './TravauxComponent';
 
 const Tab = createMaterialTopTabNavigator();
@@ -12,7 +12,7 @@ import { RouteProp } from '@react-navigation/native';
 import { Project } from '../database/dao/ProjectDao';
 
 import { Localisation } from '../database/dao/LocalisationDao';
-import { useDao } from '../stores/daoStores';
+import { useDao, useStores } from '../stores/context';
 
 type RootStackParamList = {
     InfoProjectScreen: { project: Project }; 
@@ -25,7 +25,8 @@ type Props = {
 };
 export default function InfoProjectScreen({route}:any) {
 
-    const{localisationDao} = useDao();
+    const{daoStores} = useStores();
+    const{localisationDao,projectDao} = daoStores;
     const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
    const project = route.params?.project;
    useEffect(()=>{
@@ -58,21 +59,35 @@ export default function InfoProjectScreen({route}:any) {
                 </View>
                 <Tab.Navigator>
                     <Tab.Screen name="Autorization" component={AutorizationScreen} 
+                    options={commonTopBarOptions}
                       initialParams={{
                         project:project
                        }}
                     />
-                    <Tab.Screen name="Etude" component={EtudeComponent}
+                    <Tab.Screen name="Etude" component={EtudeComponentSummary}
+                    options={commonTopBarOptions}
                     initialParams={{
                         project:project
                        }}
                     />
-                    <Tab.Screen name="Travaux" component={TravauxComponent} />
+                    <Tab.Screen name="Travaux" component={TravauxComponent}
+                    options={commonTopBarOptions}
+                     />
                 </Tab.Navigator>
             </View>
     )
 
 }
+const commonTopBarOptions= {
+    tabBarStyle:{
+      borderBottomColor:'#F4F1F1',
+      borderBottomWidth:1,
+      height:40,
+    },
+    tabBarIndicatorStyle: { 
+      backgroundColor: '#326972' 
+    },
+  }
 const styles = StyleSheet.create({
     container: {
         padding:10,

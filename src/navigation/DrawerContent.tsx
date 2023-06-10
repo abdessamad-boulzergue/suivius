@@ -6,11 +6,11 @@ import { DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navi
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import ThemeContext from '../theming/ThemeContext';
-import { ROUTES } from '../constants/routes';
-export default function DrawerContent(props:any) {
+import { ROUTES } from '../constants';
+import { useStores } from '../stores/context';
+ export default function DrawerContent(props:any) {
       const { theme, toggleTheme } = useContext(ThemeContext);
-
-      console.log(theme);
+      const {loginStore} = useStores();
       const styles = createStyles(theme);
 
     return (
@@ -27,12 +27,12 @@ export default function DrawerContent(props:any) {
             <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home" color={color} size={size} />}
                 label="Projet"
-                onPress={() => props.navigation.navigate(ROUTES.PROJECTS,{next:ROUTES.PROJECTINFO})}
+                onPress={() => props.navigation.navigate(ROUTES.PROJECTS)}
             />
              <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
                 label="Reporting"
-                onPress={() => props.navigation.navigate(ROUTES.PROJECTS,{next:ROUTES.ACTIVITY_REPORT})}
+                onPress={() => props.navigation.navigate(ROUTES.PROJECTS)}
             />
             <DrawerItem labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
@@ -42,7 +42,7 @@ export default function DrawerContent(props:any) {
               <DrawerItem  labelStyle={styles.labelStyle} 
                 icon={({ color, size }) => <Icon name="home-outline" color={color} size={size} />}
                 label="Déconnexion"
-                onPress={() => props.navigation.navigate('Login')}
+                onPress={() => loginStore.logout()}
             />
             {/* Add more DrawerItems as needed */}
 

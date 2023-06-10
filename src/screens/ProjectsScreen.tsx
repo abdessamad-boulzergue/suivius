@@ -5,64 +5,68 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import ListProjectsOverViews from './ListProjectsOverViews';
 import {inwi} from '../assets';
 import { Project } from '../database/dao/ProjectDao';
-import { ROUTES } from '../constants/routes';
 
+import { useStores } from '../stores/context';
+ 
 const Tab = createMaterialTopTabNavigator();
 
 export default function ProjectScreen({navigation,route}:any) {
     const { next } = route.params;
     const nextRouteRef = useRef(next);
-
+    const {rightsStore} = useStores();
     useEffect(() => {
-        console.log("NEXT" ,next);
+      
         nextRouteRef.current = next;
     }, [next]);  // This effect runs whenever 'next' changes
 
-    const onProjectView = (project: Project) => {
-        console.log("onProjectView ",project)
-        if(project.id_step_status===3)
-          navigation.navigate(ROUTES.ETUDE_REPORT_SCREEN, { project: project })
-        else
-            navigation.navigate(ROUTES.PROJECT_LOCALISATION, { project: project })
-      };
-
+   
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          style={styles.headerImage}
-          source={inwi.imageSource} 
-        />
-        <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
-      </View>
-      <Tab.Navigator>
+     
+          <View style={styles.header}>
+            <Image
+              style={styles.headerImage}
+              source={inwi.imageSource}
+            />
+            <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
+        </View>
+        <Tab.Navigator>
         <Tab.Screen name="FTTS" component={ListProjectsOverViews}
-          
-          initialParams={{ 
+        options={commonTopBarOptions}
+          initialParams={{
             interact:true,
             categorie:"1",
-            onProjectView:onProjectView
           }}
         />
         <Tab.Screen name="B2B" component={ListProjectsOverViews} 
+        options={commonTopBarOptions}
           initialParams={{ 
             interact:true,
             categorie:"2",
-            onProjectView:onProjectView
           }}
         />
         <Tab.Screen name="FTTH" component={ListProjectsOverViews} 
+        options={commonTopBarOptions}
           initialParams={{ 
             interact:true,
             categorie:"3",
-            onProjectView:onProjectView
           }}
         />
       </Tab.Navigator>
+     
     </View>
   );
 }
-
+const commonTopBarOptions= {
+  tabBarStyle:{
+    borderBottomColor:'#F4F1F1',
+    borderBottomWidth:1,
+    height:40,
+  },
+  tabBarIndicatorStyle: { 
+    backgroundColor: '#326972' 
+  },
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
