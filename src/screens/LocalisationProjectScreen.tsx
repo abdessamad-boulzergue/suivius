@@ -90,16 +90,18 @@ const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
             );
    }
    const startStudy=()=>{
-    projectDao.startStudy(project.id)
-    .then(response=>{
-        projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
-        setProject(  {...project, id_step_status:response.stepStatusId});
-    })
+    getLocalisation((latLng)=>{
+            projectDao.startStudy(project.id)
+            .then(response=>{
+                projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
+                setProject(  {...project, id_step_status:response.stepStatusId});
+            })
+        })
    }
 
    const startTssEditionEdition=()=>{
         getLocalisation((latLng)=>{
-            projectDao.startTssEditionEdition(project.id)
+            projectDao.startTssEditionEdition(project.id,latLng)
             .then(response=>{
                 projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
                 setProject(  {...project, id_step_status:response.stepStatusId});

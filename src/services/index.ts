@@ -4,7 +4,7 @@ import { SIMPLE_DATE_FORMAT } from "../constants"
 import { Project } from "../database/dao/ProjectDao"
 import { httpGet } from "../network/httpService"
 import { useDao, useStores } from "../stores/context"
-import { ArticleDto, PermissionDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, WorkInfoDto } from "./types"
+import { ArticleDto, PermissionDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, SquadDto, StaffDto, ToolUsageDto, WorkInfoDto } from "./types"
 
 
 
@@ -52,6 +52,17 @@ export const loadUserPermissions=(user_id:any):Promise<void | PermissionDto[]>=>
 
 export const loadReferences=():Promise<void | ReferenceDto>=>{
     return httpGet<ReferenceDto>(API_URL.references(),  "")
+}
+export const loadStaff=():Promise<void | StaffDto>=>{
+    return httpGet<StaffDto>(API_URL.staff(),  "")
+}
+
+export const loadSquad=(project_id:number):Promise<void | SquadDto>=>{
+    return httpGet<SquadDto>(API_URL.squad(project_id),  "")
+}
+
+export const loadToolsUsage=(project_id:number):Promise<void | ToolUsageDto>=>{
+    return httpGet<ToolUsageDto>(API_URL.toolUsage(project_id),  "")
 }
 
 

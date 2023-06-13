@@ -2,10 +2,11 @@ import { makeAutoObservable, runInAction } from "mobx"
 import { Project } from "../database/dao/ProjectDao";
 import { CableType, ConnectionType, EquipmentType, SiteType, WorkDetails } from "../database/types";
 import { dtoToProject } from "../services/mappers";
-import { ArticleDto, BoqDto, IssueDto, LocalisationDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, TssDto, WorkInfoDto, documentContentDto, projectWorkDetailsDto } from "../services/types";
+import { ArticleDto, AuthorizationDto, BoqDto, IssueDto, LocalisationDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, SquadDto, StaffDto, ToolDto, ToolUsageDto, TssDto, WorkInfoDto, documentContentDto, projectWorkDetailsDto } from "../services/types";
+import DeviceInfo from "react-native-device-info";
 
 class ProjectObjectStore {
-
+    
   
     
     projectsInCategorie :{[key:string]:Array<Project>} = {};
@@ -17,18 +18,33 @@ class ProjectObjectStore {
     detailsWork: WorkDetails[]=[];
     projectsTss : {[key:number]:TssDto} = {}
     projectsLocalisaion : {[key:number]:LocalisationDto} = {}
+    projectsSquad : {[key:number]:SquadDto[]} = {}
+    projectsToolsUsage: {[key:number]:ToolUsageDto[]} = {}
     projectsIssues : {[key:number]:IssueDto[]} = []
     projectsDocumentForUser : {[key:number]:ProjectDocumentsContent} = {}
     projectsBOQ : {[key:number]:BoqDto[]} = {}
     projectsWorkDetails : {[key:number]:projectWorkDetailsDto[]} = {}
-    articles: ArticleDto[] = [];
+    private articles: ArticleDto[] = [];
+    projectsAuthorization : {[key:number]:AuthorizationDto} = {}
+    private staff:StaffDto[] =[];
+    private tools:ToolDto[] =[];
      API_URL: string=" ";
+     uniqueId :string = "";
+
     constructor() {
-        makeAutoObservable(this)
+        makeAutoObservable(this);
+        this.getUid();
+    }
+    async getUid(){
+        this.uniqueId = await  DeviceInfo.getUniqueId();
     }
     setArticles(articles:  ArticleDto[]) {
        this.articles = articles;
       }
+      
+    getArticles(articles:  ArticleDto[]) {
+        return this.articles ;
+       }
     getProjectsDocument(projectId:number, type:string):documentContentDto[]{
         const docs = this.projectsDocumentForUser[projectId]
         if(docs && docs.documentsContent.length>0){
@@ -55,6 +71,9 @@ class ProjectObjectStore {
         this.siteTypes = references.siteTypes;
         this.equipementTypes = references.equipmentTypes;
         this.connectionTypes = references.connectionTypes;
+        this.staff = references.staff;
+        this.articles = references.articles;
+        this.tools = references.tools;
       }
   
     setCableTypes(types:CableType[]){
@@ -69,7 +88,25 @@ class ProjectObjectStore {
     setConnectionTypes(types:ConnectionType[]){
         this.connectionTypes =types;
     }
-
+    getStaff(){
+        return this.staff;
+    }
+    getTools(){
+        return this.tools;
+    }
+    getProjectsSquad(project:Project){
+        return this.projectsSquad[project.id];
+    }
+    setProjectsSquad(project: Project, squad: SquadDto[]) {
+        this.projectsSquad[project.id] = squad;
+    }
+    
+    getProjectsToolsUsage(project:Project){
+        return this.projectsToolsUsage[project.id];
+    }
+    setProjectsToolsUsage(project:Project,usages:ToolUsageDto[] ){
+         this.projectsToolsUsage[project.id] = usages;
+    }
     getProjectTss(project:Project){
         return this.projectsTss[project.id];
     }
@@ -85,6 +122,16 @@ class ProjectObjectStore {
     getProjectsWorkDetails(project:Project){
         return this.projectsWorkDetails[project.id] || [];
     }
+    getProjectsAuthorization(project:Project){
+        console.log("getProjectsAuthorization -------------\n",this.projectsAuthorization," \n----------------",project.id)
+
+        return this.projectsAuthorization[project.id] || {};
+    }
+    setProjectAuthorization(project_id: number, autoriz: AuthorizationDto) {
+        console.log("setProjectAuthorization -------------\n",autoriz," \n----------------",project_id)
+        this.projectsAuthorization[project_id] =autoriz;
+    }
+
     getProject(project_id:number):Project{
         return Object.keys(this.projectsInCategorie)
                     .map(key=>this.projectsInCategorie[key])
@@ -119,11 +166,15 @@ class ProjectObjectStore {
         runInAction(()=>{
             this.projectsInCategorie = {};
             projectsDto.forEach(dto=>{
+                console.log("dto.authorization -------------\n",dto.authorization," \n----------------",dto.authorization)
+
                 this.projectsTss[dto.id] = dto.tss;
                 this.projectsBOQ[dto.id] = dto.boq
                 this.projectsWorkDetails[dto.id] = dto.workDetails
                 this.projectsLocalisaion[dto.id] = dto.localisation;
-                console.log(dto.issues);
+                this.projectsSquad[dto.id] = dto.squad;
+                this.projectsToolsUsage[dto.id] = dto.toolsUsage;
+                this.setProjectAuthorization(dto.id,dto.authorization);
                 this.projectsIssues[dto.id]= dto.issues? dto.issues.filter(issue=>!issue.isClosed) :[];
                  if(this.projectsInCategorie[dto.category.id.toString()]){
                      

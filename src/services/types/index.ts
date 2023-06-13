@@ -19,7 +19,11 @@ export interface ProjectDto {
     boq:BoqDto[],
     workDetails:projectWorkDetailsDto[],
     localisation:LocalisationDto,
-    issues : IssueDto[]
+    issues : IssueDto[],
+    authorization:AuthorizationDto,
+    squad:SquadDto[],
+    toolsUsage:ToolUsageDto[]
+
 }
 
 export interface TssDto{
@@ -58,12 +62,44 @@ export interface  WorkInfoDto{
     id:number,
     title:string   
 }
+export interface  ToolDto{
+    id:number,
+    title:string   
+}
+export interface  StaffDto{
+    id:number,
+    name:string   
+}
+export interface  SquadDto{
+    memberId:number,
+    name:string,
+    normalHours:string,
+    additionalHours:string;
+    date:string
+}
+export interface  ToolUsageDto{
+    toolId:number,
+    title:string,
+    timeUsage:string,
+    date:string
+}
+export interface AuthorizationDto{
+    dateDemand:string | undefined,
+    dateCommission:string | undefined,
+    dateDecision:string | undefined,
+    datePayment:string | undefined,
+    dateSign:string |undefined
+}
+
 export interface ReferenceDto {
 
     cableTypes:CableType[],
     equipmentTypes:EquipmentType[],
     connectionTypes:ConnectionType[],
     siteTypes:SiteType[]
+    tools :ToolDto[],
+    articles:ArticleDto[],
+    staff:StaffDto[]
 
 }
 export interface BoqDto{

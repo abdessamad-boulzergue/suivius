@@ -6,6 +6,7 @@ import { RNCamera } from 'react-native-camera';
 import { useDao } from '../stores/context';
 import { Project } from '../database/dao/ProjectDao';
 import { DOC_TYPES } from '../constants';
+import { projectObjectStore } from '../stores/objectsStore';
 
  interface RNImage{
     isNew:boolean,
@@ -29,7 +30,20 @@ const ImageGrid = ({route}:any) => {
     documentDao.addToPoject(project.id,DOC_TYPES.TSS_IMAGE,{path:data.uri,type:"image/jpeg",name:fileName})
   };
 
-  const  getDocument= () => {
+  const  getDocument= async () => {
+    const docs = await documentDao.getByIdProjectAndType(project.id,DOC_TYPES.TSS_IMAGE);
+    if(docs && docs.length>0){
+      const imgs = docs.map(doc=> { return {isNew:false,uri:doc.path}})
+      setImages([ {isNew:true,uri:""},...imgs]);
+    }else{
+      const projDoc = projectObjectStore.getProjectsDocument(project.id,DOC_TYPES.TSS_IMAGE)
+      if(projDoc && projDoc.length>0){
+        const imgs = projDoc.map(doc=> { return {isNew:false,uri:doc.content}})
+            setImages([ {isNew:true,uri:""},...imgs]);
+      }
+    }
+}
+  const  getDocumentx= () => {
     documentDao.getByIdProjectAndType(project.id,DOC_TYPES.TSS_IMAGE).then(
         (docs)=>{
             const imgs = docs.map(doc=> { return {isNew:false,uri:doc.path}})

@@ -20,7 +20,8 @@ export const ROUTES = {
     WORK_TOOLS:"WORK_TOOLS_SCREEN"
   };
 
-  export const SIMPLE_DATE_FORMAT='dd/MM/yyyy' 
+  export const SIMPLE_DATE_FORMAT='yyyy-MM-dd' 
+  export const SIMPLE_DATE_TIME_FORMAT='yyyy-MM-dd HH:mm'
   export const SIMPLE_TIME_FORMAT ="HH:mm";
 
   export const ETUDE_STATUS={

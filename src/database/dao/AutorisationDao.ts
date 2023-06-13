@@ -1,6 +1,7 @@
-import { parse } from "date-fns";
+import { format, parse } from "date-fns";
 import Database, { ProjectRepository } from "..";
 import { TABLES } from "./constants";
+import { SIMPLE_DATE_FORMAT } from "../../constants";
 
 export interface Autorisation{
     id_project:string,
@@ -13,22 +14,34 @@ export interface Autorisation{
 
 export default class AutorisationDao {
     private  TABLE_NAME = 'AUTORISATION'
-    private formatDateString ="yyyy-MM-dd"
-    constructor(private database :Database){}
+     constructor(private database :Database){}
 
     findById(id:string){
        
     }
 
     async addToPoject(autorisation:Autorisation):Promise<void>{
-        return this.database.insert(this.TABLE_NAME,{...autorisation})
+        return this.database.insert(this.TABLE_NAME,{
+            id_project:autorisation.id_project,
+            date_demande:autorisation.date_demande ?format(autorisation.date_demande, SIMPLE_DATE_FORMAT ) :"",
+           date_commission:autorisation.date_commission ? format(autorisation.date_commission, SIMPLE_DATE_FORMAT):"",
+            date_decision:autorisation.date_decision? format(autorisation.date_decision, SIMPLE_DATE_FORMAT ):"",
+             date_paiment:autorisation.date_paiment? format(autorisation.date_paiment, SIMPLE_DATE_FORMAT ):"",
+              date_sign:autorisation.date_sign ?format(autorisation.date_sign, SIMPLE_DATE_FORMAT ):"",
+        })
         .then(result=>{
         }).catch(err=>{
             console.error(err);
         })
     }
-    updateDate(id_project:number , fileds:{}){
-        this.database.update(this.TABLE_NAME,fileds,{id_project:id_project})
+    updateDate(id_project:number , autorisation:Autorisation){
+        this.database.update(this.TABLE_NAME,{
+            date_demande:autorisation.date_demande ?format(autorisation.date_demande, SIMPLE_DATE_FORMAT ) :"",
+           date_commission:autorisation.date_commission ? format(autorisation.date_commission, SIMPLE_DATE_FORMAT):"",
+            date_decision:autorisation.date_decision? format(autorisation.date_decision, SIMPLE_DATE_FORMAT ):"",
+             date_paiment:autorisation.date_paiment? format(autorisation.date_paiment, SIMPLE_DATE_FORMAT ):"",
+              date_sign:autorisation.date_sign ?format(autorisation.date_sign, SIMPLE_DATE_FORMAT ):"",
+        },{id_project:id_project})
         .then(result=>{
         }).catch(err=>{
             console.error(err);
@@ -42,11 +55,11 @@ export default class AutorisationDao {
                        const  {id_project,date_demande,date_commission,date_decision,date_paiment,date_sign} = resultSet.item(0);
                        resolve ({
                         id_project,
-                        date_demande:date_demande ?parse(date_demande, this.formatDateString, new Date()) :undefined,
-                        date_commission:date_commission ? parse(date_commission, this.formatDateString, new Date()):undefined,
-                        date_decision:date_decision? parse(date_decision, this.formatDateString, new Date()):undefined,
-                        date_paiment:date_paiment? parse(date_paiment, this.formatDateString, new Date()):undefined,
-                        date_sign:date_sign ?parse(date_sign, this.formatDateString, new Date()):undefined,
+                        date_demande:date_demande ?parse(date_demande, SIMPLE_DATE_FORMAT, new Date()) :undefined,
+                        date_commission:date_commission ? parse(date_commission, SIMPLE_DATE_FORMAT, new Date()):undefined,
+                        date_decision:date_decision? parse(date_decision, SIMPLE_DATE_FORMAT, new Date()):undefined,
+                        date_paiment:date_paiment? parse(date_paiment, SIMPLE_DATE_FORMAT, new Date()):undefined,
+                        date_sign:date_sign ?parse(date_sign, SIMPLE_DATE_FORMAT, new Date()):undefined,
                        })
                    }
                    resolve(null);

@@ -22,7 +22,7 @@ import { dtosToSuiviePermission } from '../services/mappers';
 import RejectModal from '../components/RejectModal';
 import StaffActivityComponent from '../screens/StaffActivityComponent';
 import LoginScreen from '../screens/auth/LoginScreen';
-import WorkToolsScreen from '../screens/WorkToolsScreen';
+import WorkAndAuthorizationScreen from '../screens/WorkAndAuthorizationScreen';
 
 const Stack = createStackNavigator();
 
@@ -107,8 +107,8 @@ return (
         name={ROUTES.LOGIN}
       />
      <Stack.Screen
-        options={{headerShown: false, headerTitle: 'Activités'}}
-        component={WorkToolsScreen}
+        options={{ headerTitle: 'Activités'}}
+        component={WorkAndAuthorizationScreen}
         name={ROUTES.WORK_TOOLS}
       />
 

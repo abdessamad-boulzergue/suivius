@@ -10,57 +10,118 @@ import { runInAction } from 'mobx';
 import { TABLES } from '../database/dao/constants';
 import { Project } from '../database/dao/ProjectDao';
 import { format } from 'date-fns';
-interface AutorizationState {
+import { projectObjectStore } from '../stores/objectsStore';
+import { AuthorizationDto } from '../services/types';
+import { observer } from 'mobx-react-lite';
+import { parse } from "date-fns";
+import { SIMPLE_DATE_FORMAT } from '../constants';
+import SButton from '../components/common/SButton';
 
+interface AutorizationState {
+    dateDemand:Date|undefined,
+    dateCommission:Date|undefined,
+    dateDecision:Date|undefined,
+    datePayment:Date|undefined,
+    dateSign:Date|undefined
 }
 
-const AutorizationScreen = ({route,navigation}:any) => {
+const AutorizationScreen = observer(({route,navigation}:any) => {
     const project:Project = route.params?.project;
-    const [dateDemande, setDateDemande] = useState<Date|undefined>(undefined);
-    const [dateCommission, setDateCommission] = useState<Date|undefined>(undefined);
-    const [dateDecision, setDateDecision] = useState<Date|undefined>(undefined);
-    const [datePayement, setDatePayment] = useState<Date|undefined>(undefined);
-    const [dateSignature, setDateSignature] = useState<Date|undefined>(undefined);
-    const {autorisationDao} = useDao();
-    const onDateChange =async (date:Date,key:string)=>{
+    const autoriz = projectObjectStore.getProjectsAuthorization(project); 
+    const [authorisationDates,setAuthorisationDates] = useState<AutorizationState>({
+           dateCommission : autoriz.dateCommission? parse( autoriz.dateCommission,SIMPLE_DATE_FORMAT,new Date()): undefined,
+            dateDecision:  autoriz.dateDecision? parse( autoriz.dateDecision,SIMPLE_DATE_FORMAT,new Date()):undefined,
+            datePayment: autoriz.datePayment? parse(  autoriz.datePayment,SIMPLE_DATE_FORMAT,new Date()): undefined,
+            dateSign: autoriz.dateSign? parse(  autoriz.dateSign,SIMPLE_DATE_FORMAT,new Date()): undefined,
+            dateDemand: autoriz.dateDemand? parse( autoriz.dateDemand,SIMPLE_DATE_FORMAT,new Date()): undefined,
+    });
     
-        const fields :{[key:string]:any} ={};
-        fields[key]=format(date,"yyyy-MM-dd");
+    const [dateDemande, setDateDemande] = useState<Date|undefined>(parse(autoriz.dateDemand!,SIMPLE_DATE_FORMAT,new Date()));
+    const [dateCommission, setDateCommission] = useState<Date|undefined>(parse(autoriz.dateCommission!,SIMPLE_DATE_FORMAT,new Date()));
+    const [dateDecision, setDateDecision] = useState<Date|undefined>(parse(autoriz.dateDecision!,SIMPLE_DATE_FORMAT,new Date()));
+    const [datePayement, setDatePayment] = useState<Date|undefined>(parse(autoriz.datePayment!,SIMPLE_DATE_FORMAT,new Date()));
+    const [dateSignature, setDateSignature] = useState<Date|undefined>(parse(autoriz.dateSign!,SIMPLE_DATE_FORMAT,new Date()));
+    const {autorisationDao, projectDao} = useDao();
+  
+    const onDateChange =async (update:AutorizationState)=>{
+    
         const autoriz = await  autorisationDao.getByIdProject(project.id);
-        if(autoriz){
-            autorisationDao.updateDate(project.id,fields)
-        }else{
-            const autoriz :Autorisation = { date_commission:undefined,date_decision:undefined,date_demande:undefined,date_paiment:undefined,date_sign:undefined,id_project:project.id.toString()}
-            autorisationDao.addToPoject(autoriz).then(()=>{
-                autorisationDao.updateDate(project.id,fields)
-            })
+       const updates= { date_commission:update.dateCommission,
+                        date_decision:update.dateDecision,
+                        date_demande:update.dateDemand,
+                        date_paiment:update.datePayment,
+                        date_sign:update.dateSign,
+                        id_project:project.id.toString()
         }
-    }
-    useEffect(()=>{
-        autorisationDao.getByIdProject(project.id).then((autoriz:Autorisation |null)=>{
-                if(autoriz){
-                runInAction(()=>{
-                setDateCommission(autoriz.date_commission);
-                setDateDemande(autoriz.date_demande);
-                setDateDecision(autoriz.date_decision)
-                setDatePayment(autoriz.date_paiment)
-                setDateSignature(autoriz.date_sign)
-                })
-                }
+        if(autoriz){
+            autorisationDao.updateDate(project.id,updates)
+        }else{
+            autorisationDao.addToPoject(updates)
+        }
+        projectObjectStore.setProjectAuthorization(project.id , {
+            dateCommission : update.dateCommission? format(update.dateCommission,SIMPLE_DATE_FORMAT): "",
+            dateDecision: update.dateDecision? format(update.dateDecision,SIMPLE_DATE_FORMAT): "",
+            datePayment:update.datePayment? format( update.datePayment,SIMPLE_DATE_FORMAT): "",
+            dateSign:update.dateSign? format( update.dateSign,SIMPLE_DATE_FORMAT): "",
+            dateDemand:update.dateDemand? format(update.dateDemand,SIMPLE_DATE_FORMAT): "",
         })
+
+        setAuthorisationDates(update);
+    }
+    const updateDateDemande =(date:Date)=>{
+        const update :AutorizationState= {...authorisationDates, dateDemand:date}
+        onDateChange(update);
+    }
+    const updateDateCommission=(date:Date)=>{
+        const update :AutorizationState = {...authorisationDates, dateCommission:date}
+        onDateChange(update);
+    }
+    const updateDateDecision=(date:Date)=>{
+        const update :AutorizationState = {...authorisationDates, dateDecision:date}
+        onDateChange(update);
+    }
+    const updateDatePayment=(date:Date)=>{
+        const update  :AutorizationState= {...authorisationDates, datePayment:date}
+        onDateChange(update);
+    }
+    const updateDateSignature=(date:Date)=>{
+        const update  :AutorizationState= {...authorisationDates, dateSign:date}
+        onDateChange(update);
+    }
+
+    const sendAuthorize=()=>{
+        const autoriz = projectObjectStore.getProjectsAuthorization(project); 
+        console.log("sendAuthorize",autoriz)
+        projectDao.sendAuthorize(project.id,autoriz)
+    }
+    useEffect(()=>{ 
+        const autoriz = projectObjectStore.getProjectsAuthorization(project); 
+                if(autoriz){
+                    runInAction(()=>{
+                        setDateCommission(parse(autoriz.dateCommission!,SIMPLE_DATE_FORMAT,new Date()));
+                        setDateDemande(parse(autoriz.dateDemand!,SIMPLE_DATE_FORMAT,new Date()));
+                        setDateDecision(parse(autoriz.dateDecision!,SIMPLE_DATE_FORMAT,new Date()));
+                        setDatePayment(parse(autoriz.datePayment!,SIMPLE_DATE_FORMAT,new Date()));
+                        setDateSignature(parse(autoriz.dateSign!,SIMPLE_DATE_FORMAT,new Date()));
+                    })
+                }
     },[])
 
         return (
             <View style={{flex: 1,padding:10}}>
-               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateDemande.name) } key={dateDemande} title="Date dépôt de la demande" date={dateDemande} />
-               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateCommission.name) } key={dateCommission}  title="Date de la commission" date={dateCommission}/>
-               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateDecision.name) } key={dateDecision} title="Date dépôt de decision de la commission" date={dateDecision} />
-               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.datePayment.name) } key={datePayement} title="Date de paiment" date={datePayement}/>
-               <SuiviInputDate onChange={(date:Date)=>onDateChange(date,TABLES.Autorisation.fields.dateSignature.name) } key={dateSignature} title="Date de signature de l'autorisation " date={dateSignature} />
+               <SuiviInputDate onChange={updateDateDemande} key={"dateDemande"} title="Date dépôt de la demande" date={authorisationDates.dateDemand} />
+               <SuiviInputDate onChange={updateDateCommission} key={"dateCommission"}  title="Date de la commission" date={authorisationDates.dateCommission}/>
+               <SuiviInputDate onChange={updateDateDecision} key={"dateDecision"} title="Date dépôt de decision de la commission" date={authorisationDates.dateDecision} />
+               <SuiviInputDate onChange={updateDatePayment} key={"datePayement"} title="Date de paiment" date={authorisationDates.datePayment}/>
+               <SuiviInputDate onChange={updateDateSignature} key={"dateSignature"} title="Date de signature de l'autorisation " date={authorisationDates.dateSign} />
+           
+               <SButton  style={{ alignSelf:"center", height:50,  width:"60%", margin:30}} title="Envoyer" 
+                        onPress={()=>sendAuthorize()}></SButton>
             </View>
         );
     
-}
+});
+
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
 

@@ -15,6 +15,11 @@ import { TABLES } from '../database/dao/constants';
 import { format } from 'date-fns';
 import { StaffMember } from '../database/dao/StaffDao';
 import { CardSection, Input } from '../components/common';
+import SButton from '../components/common/SButton';
+import { SquadDto } from '../services/types';
+import { projectObjectStore } from '../stores/objectsStore';
+import {SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
+import { ModalList, ModalListItem } from '../components/ModalList';
 interface ListItem{
     
 }
@@ -51,30 +56,28 @@ export const ModalStaff =({pages,visible, onClose}:any)=> {
                     visible={modalVisible}
                     onRequestClose={() => { }}>
                     <View style={{margin: 22}}>
-                        <View>
-
                         <SectionList sections={staffPage}
-                 renderItem={({item}:{item: StaffMember}) =>{ 
-                    
-                    return(
-                        <TouchableOpacity onLongPress={() => onLongPress(item)}>
-                            <CardSection style={{backgroundColor: isItemSelected(item) ? "#aeaebe" : "#ffffff"}}>
-                            <Input label="name" value={ item.name } editable={false} />
-                            </CardSection>
-                        </TouchableOpacity>
-                        
-                    )
-                }}
-                ItemSeparatorComponent={()=> <View style={styles.separator} />}
+                            renderItem={({item}:{item: StaffMember}) =>{ 
+                                
+                                return(
+                                    <TouchableOpacity onLongPress={() => onLongPress(item)}>
+                                        <CardSection style={{backgroundColor: isItemSelected(item) ? "#aeaebe" : "#ffffff"}}>
+                                        <Input label="name" value={ item.name } editable={false} />
+                                        </CardSection>
+                                    </TouchableOpacity>
+                                    
+                                )
+                            }}
+                            ItemSeparatorComponent={()=> <View style={styles.separator} />}
 
-                keyExtractor={(item, index) => index.toString()}
-               
-
-                 />
-
-                <Button onPress={()=>closeModal()}> <Icon size={20} name="search"/> </Button>
-
-                        </View>
+                            keyExtractor={(item, index) => index.toString()}
+                             />
+                    </View>
+                    <View style={{flexDirection:"row", justifyContent:"space-evenly"}}>
+                    <SButton  style={{ color:"#E55959",height:50,alignSelf:"center", backgroundColor:"transparent", width:"40%", }} title="fermer" 
+                        onPress={()=>onClose([])}></SButton>
+                        <SButton  style={{ alignSelf:"center", height:50,  width:"50%", }} title="Ajouter" 
+                        onPress={closeModal}></SButton>
                     </View>
                 </Modal>
         );
@@ -83,30 +86,31 @@ export const ModalStaff =({pages,visible, onClose}:any)=> {
 
 const StaffActivityComponent = ({route,navigation}:any) => {
 
-    const selectedOption="";
     const  project:Project = route.params.project;
-    const {workDao,staffDao} = useDao();
-    const [pages, setPages] = useState<Array<{title:string,data:Array<Work>}>>([]);
-    const [filtredStaff, setFiltredStaff] = useState<Array<{title:string,data:Array<StaffMember>}>>([]);
-
+    const {workDao,projectDao} = useDao();
+    const [squad, setSquad] = useState<SquadDto[]>([]);
+    const [staff,setStaff] = useState<ModalListItem[]>([])
     const [modalVisible, setModalVisible] = useState<boolean>(false);
 
     useEffect(()=>{
-        getStaffWOrk();
+      const staffData = projectObjectStore.getStaff();
+      if(staffData)
+          setStaff(staffData.map(data=>{
+            return { id:data.id, title:data.name}
+          }))
+     const squadData =  projectObjectStore.getProjectsSquad(project)
+     setSquad(squadData);
     },[])
     const  getStaffWOrk= () => {
         workDao.getByIdProject(project.id).then(
             (work)=>{
                 console.log(work)
-                setPages([{title:"", data:work}]);
             }
         );
     }
     const  filterStaff= async (name:string) => {
-       const filtered = await staffDao.getWithFilter({name:name})
-        setFiltredStaff([{title:"", data:filtered}]);
-        console.log("FILTERED : " , filtered)
-        setModalVisible(true)
+
+         setModalVisible(true)
 
     }
     const getDate=(time:string):Date=>{
@@ -115,27 +119,56 @@ const StaffActivityComponent = ({route,navigation}:any) => {
         date.setHours(hours||0, minutes||0);
         return date;
     }
-   const  addStaffWork=(staff:Array<StaffMember>)=>{
-        setModalVisible(false)
-        staff.filter(member=> pages.length===0 || pages[0].data.length ===0 || pages[0].data.find(it=>it.id_staff===member.id)===undefined)
-        .forEach(async member=>{
-            const work :Work ={
-                id_project : project.id,
-                id_staff:member.id,
-                nbr_add_hour:"",
-                nbr_hour:"",
-                staff:member
-            }
-            pages[0].data.push(work)
-            await workDao.add(work);
-        })
-        setPages(pages)
+    const sendSquadWork =()=>{
+        const squadWork = projectObjectStore.getProjectsSquad(project)
+         
+        console.log(squadWork)
+         projectDao.sendSquadWork(project.id,squadWork)
     }
-    const onDateChange =(date:Date,id_staff:number,key:string)=>{
-    
-        const fields :{[key:string]:any} ={};
-        fields[key]=format(date,"HH:mm");
-        workDao.updateDate(project.id,id_staff,fields)
+   const  addStaffWork=(staff:Array<ModalListItem>)=>{
+        setModalVisible(false)
+       const squadWork :SquadDto[ ]= staff.filter(member=> squad.length===0 || squad.find(it=>it.memberId===member.id)===undefined)
+        .map( member=>{
+            return  {
+                name:member.title,
+                memberId:member.id,
+                normalHours:"",
+                additionalHours:"",
+                date: format(new Date(),SIMPLE_TIME_FORMAT)
+            }
+        })
+        setSquad([...squad, ...squadWork])    
+        projectObjectStore.setProjectsSquad(project,[...squad,...squadWork])       
+
+    }
+
+        const setNormalHours = (date:Date,id_staff:number)=>{
+            const index = squad.findIndex(it=>it.memberId===id_staff) 
+            const update :SquadDto = {
+                additionalHours :squad[index].additionalHours,
+                normalHours:format(date,SIMPLE_TIME_FORMAT),
+                memberId: squad[index].memberId,
+                date : format(new Date(),SIMPLE_DATE_FORMAT),
+                name: squad[index].name
+            }
+
+            const squadUpdate = [ ...squad.slice(0,index),update, ...squad.slice(index+1)]
+            setSquad(squadUpdate);
+            projectObjectStore.setProjectsSquad(project ,squadUpdate)
+        }
+    const setAditionalHours =(date:Date,id_staff:number)=>{
+        const index = squad.findIndex(it=>it.memberId===id_staff) 
+        const update :SquadDto = {
+            additionalHours :format(date,SIMPLE_TIME_FORMAT),
+            normalHours:squad[index].normalHours,
+            memberId: squad[index].memberId,
+            date : format(new Date(),SIMPLE_DATE_FORMAT),
+            name: squad[index].name
+        }
+
+        const squadUpdate = [ ...squad.slice(0,index),update, ...squad.slice(index+1)]
+        setSquad(squadUpdate);
+        projectObjectStore.setProjectsSquad(project ,squadUpdate)
     }
   const renderSeparator = () => {
     return <View style={styles.separator} />;
@@ -152,38 +185,34 @@ const StaffActivityComponent = ({route,navigation}:any) => {
                             value="" placeholder="recherher un collaborateur"></InputSearch>
                 </View>
 
-                <ModalStaff pages={filtredStaff} visible={modalVisible} onClose={(selectedMembers:Array<StaffMember>)=>{
-                    addStaffWork(selectedMembers)
-                }}></ModalStaff>
+                <ModalList data={staff} visible={modalVisible} onClose={addStaffWork} ></ModalList>
 
-                { 
-                    <SectionList sections={pages}
-                    renderItem={({item}:{item: Work}) =>{ 
+
+                    <FlatList data={squad}
+                    renderItem={({item}:{item: SquadDto}) =>{ 
                         
                         return(
                             <View style ={styles.listItem}>
                                 <View style={{width:"25%"}}>
-                                    <Text style ={styles.listItemTitle}>{(item.staff?.name)}</Text>
+                                    <Text style ={styles.listItemTitle}>{(item.name)}</Text>
                                 </View>
                                 <View style={{width:"30%"}}>
-                                    <SuiviInputDate onChange={(date:Date)=>onDateChange(date,item.id_staff,TABLES.Work.fields.NBR_HOUR.name)} date={getDate(item.nbr_hour)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
+                                    <SuiviInputDate onChange={(date:Date)=>setNormalHours(date,item.memberId)} date={getDate(item.normalHours)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
                                 </View>
                                 <View style={{width:"30%"}}>
-                                    <SuiviInputDate  onChange={(date:Date)=>onDateChange(date,item.id_staff,TABLES.Work.fields.NBR_ADD_HOUR.name)} date={getDate(item.nbr_add_hour)}  title="Nbr H.SUPP"  mode="time"style={styles.inputDate} ></SuiviInputDate>
+                                    <SuiviInputDate  onChange={(date:Date)=>setAditionalHours(date,item.memberId)} date={getDate(item.additionalHours)}  title="Nbr H.SUPP"  mode="time"style={styles.inputDate} ></SuiviInputDate>
                                 </View>
                                 <Text style={{color:"black"}}>5h30</Text>
                             </View>
                         )
                     }}
-                    renderSectionHeader={({section}) => {
-                                    return(section.title?  (<Text style ={styles.sectionTitle}></Text>) : null)
-                                }}
                     keyExtractor={(item, index) => index.toString()}
                 
                     ItemSeparatorComponent={renderSeparator}
 
                     />
-                }
+                 <SButton  style={{ alignSelf:"center", height:50,  width:"60%",margin:15 }} title="Envoyer" 
+                        onPress={ sendSquadWork }></SButton>
             </View>
         );
     

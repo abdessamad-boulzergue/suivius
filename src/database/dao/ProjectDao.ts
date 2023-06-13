@@ -11,7 +11,8 @@ import RNFS from 'react-native-fs';
 import { uploadFiles } from "../../utils/uploadFiles";
 import { Article } from "./ArticleDao";
 import { ArticleConsume } from "./ArticleConsumeDao";
-import { BoqDto } from "../../services/types";
+import { AuthorizationDto, BoqDto, SquadDto, ToolUsageDto } from "../../services/types";
+import { projectObjectStore } from "../../stores/objectsStore";
 
 export interface Project{
     id:number,
@@ -218,12 +219,17 @@ export default class ProjectDao {
     preValidateTss(project:Project):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
             const tss :Tss|null= await this.stores.daoStores.tssDao.getById(project.id)
+            const projectWorkDetailsDb = await this.stores.daoStores.projectWorkDetailsDao.getByIdProject(project.id)
+            const projectWorkDetailsDto = projectWorkDetailsDb.map(wdt=>{
+                return {workInfoId:wdt.id_info,value:wdt.value}
+            });
             if(tss){
                 const tssDto:any={
                      cableTypeId:tss.cableType,
                      siteTypeId:tss.siteType,
                      connectionTypeId:tss.connectionType,
                      equipmentTypeId:tss.equipmentType,
+                     workDetails:projectWorkDetailsDto
                 }
                 const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateTss(project.id),tssDto,"")
    
@@ -252,16 +258,47 @@ export default class ProjectDao {
     }
     startStudy(project_id:number):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startStudy(project_id),{},"")  
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startStudy(project_id),{
+                deviceId : projectObjectStore.uniqueId
+            },"")  
             resolve(dto.data);
     })
     }
-    startTssEditionEdition(project_id:number):Promise<StatusUpdateResponseDto>{
+    startTssEditionEdition(project_id:number, position:{latitude:number,longitude:number}):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startTss(project_id),{},"")  
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startTss(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                ...position
+            },"")  
             resolve(dto.data);
     })
     }
+   async  sendToolUsage(project_id:number,usages:ToolUsageDto[]){
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.toolUsage(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                usages : usages
+            },"")  
+            resolve(dto.data);
+        })
+    }
+    async sendSquadWork(project_id:number,squadWork:SquadDto[]){
+        console.log("sendSquadWork", project_id, squadWork)
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.staffWork(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                squad : squadWork
+            },"")
+            resolve(dto.data);
+        })
+    }
+    async  sendAuthorize(project_id:number,authorize:AuthorizationDto ){
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.authorization(project_id),authorize,"")  
+            resolve(dto.data);
+        })
+    }
+
     preValidateAPD(project:Project):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
             const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateAPD(project.id),{},"")   
@@ -282,6 +319,7 @@ export default class ProjectDao {
 
         })
     }
+
     sendAPD(project:Project):Promise<StatusUpdateResponseDto>{
 
         return new Promise(async (resolve, reject) => {

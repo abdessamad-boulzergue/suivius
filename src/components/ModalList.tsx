@@ -14,12 +14,22 @@ export interface ModalListItem{
 export const ModalList =({data,visible, onClose}:{data:ModalListItem[],visible:boolean,onClose:(items:ModalListItem[])=>void})=> {
     const [selectedItem, setSelectedItem] = useState<Array<ModalListItem>>([]);
     onClose = onClose || (()=>{});
+    console.log("selected" ,  data)
 
     const closeModal=()=>{
         onClose(selectedItem)
     }
     const onLongPress = (item:any) => {
-        setSelectedItem((prevSelected) => [...prevSelected, item]);
+        setSelectedItem((prevSelected) => {
+            const index =prevSelected.findIndex(it=>it.id==item.id);
+            if(index!==-1) {
+                return [
+                    ...prevSelected.slice(0,index),
+                    ...prevSelected.slice(index+1)
+                ]
+            } 
+            return [...prevSelected, item];
+        });
       };
       const isItemSelected = (item:any) => {
         return selectedItem.some(member => member === item);
@@ -37,7 +47,7 @@ export const ModalList =({data,visible, onClose}:{data:ModalListItem[],visible:b
                             renderItem={({item}) =>{ 
                                 
                                 return(
-                                    <TouchableOpacity onLongPress={() => onLongPress(item)}>
+                                    <TouchableOpacity onPress={() => onLongPress(item)}>
                                         <CardSection style={{backgroundColor: isItemSelected(item) ? "#aeaebe" : "#ffffff"}}>
                                         <Input  value={ item.title } editable={false} />
                                         </CardSection>

@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Text,  StyleSheet,  SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView
+    Text,  StyleSheet,  SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView, FlatList
 } from 'react-native';
 
 import SuiviInputText from '../components/InputText';
 import SuiviInputDate from '../components/InputDate';
-import { Project } from '../database/dao/ProjectDao';
+import ProjectDao, { Project } from '../database/dao/ProjectDao';
 import { useDao } from '../stores/context';
 import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
@@ -13,6 +13,13 @@ import WorkToolsUsageDao from '../database/dao/WorkToolsUsageDao';
 import { WorkToolsUsage } from '../database/dao/WorkToolsUsageDao';
 import { format } from 'date-fns';
 import { TABLES } from '../database/dao/constants';
+import SButton from '../components/common/SButton';
+import { projectObjectStore } from '../stores/objectsStore';
+import { observer } from 'mobx-react-lite';
+import { ToolDto, ToolUsageDto } from '../services/types';
+import { SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
+import { SIMPLE_DATE_TIME_FORMAT } from '../constants';
+import { ModalList, ModalListItem } from '../components/ModalList';
 
 
 interface ListOverViewState {
@@ -21,24 +28,27 @@ interface ListOverViewState {
     selectData:Array<any>
   }
 
-const ToolsActivityComponent =({route,navigation}:any) => {
+const ToolsActivityComponent = observer( ({route,navigation}:any) => {
 
-    const selectedOption="";
+     const [modalVisible, setModalVisible] = useState<boolean>(false);
+     const [tools,setTools] = useState<ModalListItem[]>([])
+
     const  project:Project = route.params.project;
-    const {workToolsUsageDao} = useDao();
-    const [pages, setPages] = useState<Array<{title:string,data:Array<any>}>>([]);
+    const {workToolsUsageDao, projectDao} = useDao();
+    const [toolUsage, setToolUsage] = useState<ToolUsageDto[]>([]);
 
     useEffect(()=>{
-        getArticleConsumes();
+      const tools = projectObjectStore.getTools();
+      if(tools)
+          setTools(tools.map(data=>{
+            return {...data}
+          }))
+        const usages = projectObjectStore.getProjectsToolsUsage(project)
+        if(usages){
+          setToolUsage(usages)
+        }
     },[])
-    const  getArticleConsumes= () => {
-        workToolsUsageDao.getByIdProject(project.id).then(
-            (consumes)=>{
-                console.log(consumes)
-                setPages([{title:"", data:consumes}]);
-            }
-        );
-    }
+
     const getDate=(time:string):Date=>{
         const [hours, minutes] = time.split(':').map(Number);
         const date = new Date(); // Create a new Date object
@@ -48,45 +58,83 @@ const ToolsActivityComponent =({route,navigation}:any) => {
   const renderSeparator = () => {
     return <View style={styles.separator} />;
   };
-  const onDateChange =(date:Date,id_tool:number,key:string)=>{
+  
+  const sendToolUsage =()=>{
+    const usages = projectObjectStore.getProjectsToolsUsage(project)
+     projectDao.sendToolUsage(project.id,usages)
+  }
+  const  addTool=(tools:Array<ModalListItem>)=>{
+    setModalVisible(false)
+    const newTools :ToolUsageDto[ ]= tools.filter(tool=> toolUsage.length===0 || toolUsage.find(it=>it.toolId===tool.id)===undefined)
+                                      .map(tool=>{
+                                        return { date: format(new Date(),SIMPLE_DATE_FORMAT), 
+                                                 title:tool.title,
+                                                 timeUsage:'',
+                                                 toolId:tool.id
+                                                }
+                                      })
+      setToolUsage([...toolUsage,...newTools]);
+      projectObjectStore.setProjectsToolsUsage(project,[...toolUsage,...newTools])       
+  }
+  const filterTools=(title:string)=>{
+    setModalVisible(true);
+  }
+  const onDateChange =(date:Date,tool:ToolUsageDto)=>{
+    const index = toolUsage.findIndex(usage=> usage.toolId ==tool.toolId);
+    let   usages :ToolUsageDto[] = [];
+    const update:ToolUsageDto= { toolId:tool.toolId,
+                                  title :tool.title, 
+                                  timeUsage : format(date,SIMPLE_TIME_FORMAT),  
+                                  date : format(new Date(),SIMPLE_DATE_FORMAT)
+                                }
+
+       usages  = [ ...toolUsage.slice(0,index),update, ...toolUsage.slice(index+1)]
     
-    const fields :{[key:string]:any} ={};
+    console.log("tool ", tool,"  index ",usages)
+    setToolUsage(usages)
+    projectObjectStore.setProjectsToolsUsage(project,usages)
+
+    /*const fields :{[key:string]:any} ={};
     fields[key]=format(date,"HH:mm");
-    workToolsUsageDao.updateDate(project.id,id_tool,fields)
+    workToolsUsageDao.updateDate(project.id,id_tool,fields)*/
 }
 
         return (
             <View style={{flex: 1,}}>
                 <View style={styles.dropdownContainer}>
-                    <Text style={styles.label}>rechercher collaborateur :</Text>
-                        <InputSearch placeholder="recherher un collaborateur"></InputSearch>
+                <Text style={styles.label}>rechercher collaborateur :</Text>
+                        <InputSearch onSearch={(text:string)=> {
+                            filterTools(text)
+                        }} 
+                            value="" placeholder="recherher un collaborateur"></InputSearch>
                 </View>
-                <SectionList sections={pages}
-                 renderItem={({item}:{item: WorkToolsUsage}) =>{ 
+
+                <ModalList data={tools} visible={modalVisible} onClose={addTool} ></ModalList>
+                <FlatList data={toolUsage}
+                 renderItem={({item}:{item: ToolUsageDto}) =>{ 
                     
                     return(
                         <View style ={styles.listItem}>
                             <View style={{width:"25%"}}>
-                                <Text style ={styles.listItemTitle}>{(item.tool?.title)}</Text>
+                                <Text style ={styles.listItemTitle}>{(item.title)}</Text>
                             </View>
                             <View style={{width:"30%"}}>
-                                 <SuiviInputDate onChange={(date:Date)=>onDateChange(date,item.id_tool,TABLES.WorkToolsUsage.fields.NBR_HOUR.name)} date={getDate(item.nbr_hour)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
+                                 <SuiviInputDate onChange={(date:Date)=>onDateChange(date,item)} date={getDate(item.timeUsage)} title="Nbr H.N" mode="time" style={styles.inputDate}></SuiviInputDate>
                              </View>
                         </View>
                     )
-                }}
-                 renderSectionHeader={({section}) => {
-                                return(section.title?  (<Text style ={styles.sectionTitle}></Text>) : null)
-                            }}
+                }} 
                 keyExtractor={(item, index) => index.toString()}
                
                 ItemSeparatorComponent={renderSeparator}
 
                  />
+                 <SButton  style={{ alignSelf:"center", height:50,  width:"60%",margin:15 }} title="Envoyer" 
+                        onPress={()=>sendToolUsage()}></SButton>
             </View>
         );
     
-}
+})
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
     dropdown: {

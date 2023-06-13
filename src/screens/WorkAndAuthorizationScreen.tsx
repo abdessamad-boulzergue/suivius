@@ -11,10 +11,11 @@ import { Localisation } from '../database/dao/LocalisationDao';
 import { DOC_TYPES } from '../constants';
 import ToolsActivityComponent from './ToolsActivityComponent';
 import StaffActivityComponent from './StaffActivityComponent';
+import AutorizationScreen from './AutorizationScreen';
 
 const Tab = createMaterialTopTabNavigator();
 
-export default function WorkToolsScreen({route}:any) {
+export default function WorkAndAuthorizationScreen({route}:any) {
 
     const project = route.params?.project;
 
@@ -63,7 +64,15 @@ export default function WorkToolsScreen({route}:any) {
           initialParams={{ 
             project:project
           }}
-        />
+        /> 
+      <Tab.Screen name="Autorization" component={AutorizationScreen} 
+        options={commonTopBarOptions}
+          initialParams={{ 
+            project:project
+          }}
+        /> 
+
+
       </Tab.Navigator>
     </View>
   );
