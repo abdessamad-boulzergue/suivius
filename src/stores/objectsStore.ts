@@ -1,9 +1,10 @@
 import { makeAutoObservable, runInAction } from "mobx"
 import { Project } from "../database/dao/ProjectDao";
-import { CableType, ConnectionType, EquipmentType, SiteType, WorkDetails } from "../database/types";
+import { CableType, ConnectionType, EquipmentType, SiteType, StatusUpdateResponseDto, WorkDetails } from "../database/types";
 import { dtoToProject } from "../services/mappers";
-import { ArticleDto, AuthorizationDto, BoqDto, IssueDto, LocalisationDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, SquadDto, StaffDto, ToolDto, ToolUsageDto, TssDto, WorkInfoDto, documentContentDto, projectWorkDetailsDto } from "../services/types";
+import { ArticleConsumesDto, ArticleDto, AuthorizationDto, BoqDto, ClientDto, IssueDto, LocalisationDto, ProjectDocumentsContent, ProjectDto, ReferenceDto, ReportDto, SquadDto, StaffDto, StepStatusDto, ToolDto, ToolUsageDto, TssDto, VendorDto, WorkInfoDto, documentContentDto, projectWorkDetailsDto } from "../services/types";
 import DeviceInfo from "react-native-device-info";
+import StepStatusDao from "../database/dao/StepStatusDao";
 
 class ProjectObjectStore {
     
@@ -12,14 +13,14 @@ class ProjectObjectStore {
     projectsInCategorie :{[key:string]:Array<Project>} = {};
 
     cableTypes: CableType[] = [];
+    vendors:VendorDto[]=[];
     siteTypes: SiteType[]  =  [];
     equipementTypes: EquipmentType[] = [];
     connectionTypes: ConnectionType[] = [];
     detailsWork: WorkDetails[]=[];
     projectsTss : {[key:number]:TssDto} = {}
     projectsLocalisaion : {[key:number]:LocalisationDto} = {}
-    projectsSquad : {[key:number]:SquadDto[]} = {}
-    projectsToolsUsage: {[key:number]:ToolUsageDto[]} = {}
+    projectsReports : {[key:number]:ReportDto[]} = {}
     projectsIssues : {[key:number]:IssueDto[]} = []
     projectsDocumentForUser : {[key:number]:ProjectDocumentsContent} = {}
     projectsBOQ : {[key:number]:BoqDto[]} = {}
@@ -30,6 +31,8 @@ class ProjectObjectStore {
     private tools:ToolDto[] =[];
      API_URL: string=" ";
      uniqueId :string = "";
+     stepStatus:StepStatusDto[] = []
+     clients: {[key:number]:ClientDto} ={}
 
     constructor() {
         makeAutoObservable(this);
@@ -42,9 +45,12 @@ class ProjectObjectStore {
        this.articles = articles;
       }
       
-    getArticles(articles:  ArticleDto[]) {
+    getArticles( ) {
         return this.articles ;
        }
+    getClient(project_id:number):ClientDto {
+        return this.clients[project_id] ;
+    }
     getProjectsDocument(projectId:number, type:string):documentContentDto[]{
         const docs = this.projectsDocumentForUser[projectId]
         if(docs && docs.documentsContent.length>0){
@@ -66,6 +72,12 @@ class ProjectObjectStore {
            })
       }
   
+      setVendors(vendors:VendorDto[]){
+        this.vendors =vendors;
+      }
+      getVendors():VendorDto[]{
+        return this.vendors;
+      }
       setReferences(references: ReferenceDto) {
         this.cableTypes = references.cableTypes;
         this.siteTypes = references.siteTypes;
@@ -74,8 +86,12 @@ class ProjectObjectStore {
         this.staff = references.staff;
         this.articles = references.articles;
         this.tools = references.tools;
+        this.stepStatus =references.stepStatus;
       }
-  
+
+    getStatus(id_status:number){
+        return this.stepStatus.filter(status=>status.id ===id_status)[0]
+    }
     setCableTypes(types:CableType[]){
         this.cableTypes =types;
     }
@@ -94,20 +110,119 @@ class ProjectObjectStore {
     getTools(){
         return this.tools;
     }
-    getProjectsSquad(project:Project){
-        return this.projectsSquad[project.id];
+    getProjectsSquad(project:Project,uid:string){
+        return this.projectsReports[project.id].filter(report=>report.uid==uid)[0].squads || [];
     }
-    setProjectsSquad(project: Project, squad: SquadDto[]) {
-        this.projectsSquad[project.id] = squad;
+    getProjectsArticleConsumes(project:Project,uid:string){
+        return this.projectsReports[project.id].filter(report=>report.uid==uid)[0].consumes || [];
     }
-    
-    getProjectsToolsUsage(project:Project){
-        return this.projectsToolsUsage[project.id];
+    setProjectsArticleConsumes(project:Project,uid:string,consumes:ArticleConsumesDto[]){
+        const  index= this.projectsReports[project.id].findIndex(report=>report.uid==uid);
+       if(index!==-1){
+            this.projectsReports[project.id][index] = {
+                ... this.projectsReports[project.id][index],
+                consumes :consumes
+            }
+       }
     }
-    setProjectsToolsUsage(project:Project,usages:ToolUsageDto[] ){
-         this.projectsToolsUsage[project.id] = usages;
+    getProjectsReport(project:Project,uid:string):ReportDto{
+        return this.projectsReports[project.id].filter(report=>report.uid===uid)[0];
+    }
+    getProjectReports(project:Project){
+        return this.projectsReports[project.id];
+    }
+    addProjectReport(project:Project,report:ReportDto){
+        return this.projectsReports[project.id] = [
+            ...this.projectsReports[project.id],
+            report
+        ];
+    }
+    setProjectsSquad(project: Project,uid:string, squad: SquadDto[]) {
+       const  index= this.projectsReports[project.id].findIndex(report=>report.uid==uid);
+       if(index!==-1){
+        this.projectsReports[project.id][index] = {
+            ... this.projectsReports[project.id][index],
+            squads :squad
+        }
+       }
+    }
+    updateReport(project:Project,report:ReportDto){
+       const index =  this.projectsReports[project.id]
+           .findIndex(r=>r.uid==report.uid);
+
+        if(index!=-1){
+            console.log('report',"-######--, \n",report)
+            this.projectsReports[project.id] = [
+                ...this.projectsReports[project.id].slice(0,index),
+                report,
+                ...this.projectsReports[project.id].slice(index+1),
+            ]
+        }
+    }
+    getProjectsToolsUsage(project:Project,uid:string){
+        return this.projectsReports[project.id].filter(report=>report.uid==uid)[0].usages || [];
+    }
+    getValidateReport(project:Project):ReportDto[]{
+        return this.projectsReports[project.id]
+                   .filter(report=>report.status ==="VALID")
+    }
+    getValidateBOQ(project:Project):BoqDto[]{
+        const boqs : BoqDto[] =[];
+         this.projectsReports[project.id]
+                   .filter(report=>report.status ==="VALID")
+                   .flatMap(report=>report.consumes)
+                   .forEach(consume=>{
+                      const index = boqs.findIndex(boq=>boq.articleId ===consume.articleId);
+                        if(index===-1){
+                            boqs.push({
+                                articleId : consume.articleId,
+                                quantity:consume.quantity,
+                                title:consume.title,
+                                unite:consume.unite
+                            })
+                        }else{
+                            boqs[index].quantity += consume.quantity;
+                        }
+                   });
+        return boqs;
+    }
+
+    getLeftBOQ(project:Project):BoqDto[]{
+        const boqs : BoqDto[] =[];
+        const projectBoq = this.getProjectsBOQ(project);
+         this.projectsReports[project.id]
+                   .flatMap(report=>report.consumes)
+                   .forEach(consume=>{
+                      const indexBoqProject = projectBoq.findIndex(boq=>boq.articleId ===consume.articleId);
+                      const indexNewBoq = boqs.findIndex(boq=>boq.articleId ===consume.articleId);
+                        if(indexBoqProject!=-1 && indexNewBoq===-1){
+                            boqs.push({
+                                articleId : consume.articleId,
+                                quantity:projectBoq[indexBoqProject].quantity-consume.quantity,
+                                title:consume.title,
+                                unite:consume.unite
+                            })
+                        }
+                        if(indexBoqProject!==-1 && indexNewBoq!==-1){
+                            boqs[indexNewBoq].quantity -= consume.quantity;
+                        }
+                   });
+        return boqs;
+    }
+
+    setProjectsToolsUsage(project:Project,uid:string,usages:ToolUsageDto[] ){
+        const  index= this.projectsReports[project.id].findIndex(report=>report.uid==uid);
+        if(index!==-1){
+         this.projectsReports[project.id][index] = {
+             ... this.projectsReports[project.id][index],
+             usages :usages
+         }
+        }
     }
     getProjectTss(project:Project){
+        
+        console.log(project.id, '\n', this.projectsTss)
+
         return this.projectsTss[project.id];
     }
     setProjectTss(project:Project,tss:TssDto){
@@ -119,6 +234,24 @@ class ProjectObjectStore {
     getProjectsBOQ(project:Project){
         return this.projectsBOQ[project.id] || [];
     }
+    addProjectsBOQ(project:Project, boq:BoqDto){
+        const idx = this.projectsBOQ[project.id].findIndex(b => b.articleId == boq.articleId );
+        console.log("idx : ", idx,+" \n ", this.projectsBOQ[project.id],"\n",boq)
+        if(idx!==-1){
+            this.projectsBOQ[project.id] = [
+                ...this.projectsBOQ[project.id].slice(0,idx),
+                boq,
+                ...this.projectsBOQ[project.id].slice(idx+1)
+            ]
+        }else{
+            this.projectsBOQ[project.id] = [
+                ...this.projectsBOQ[project.id],
+                boq
+            ]
+        }
+
+        console.log("\n \n after  : ", idx,+" \n ", this.projectsBOQ[project.id],"\n",boq)
+    } 
     getProjectsWorkDetails(project:Project){
         return this.projectsWorkDetails[project.id] || [];
     }
@@ -134,9 +267,8 @@ class ProjectObjectStore {
 
     getProject(project_id:number):Project{
         return Object.keys(this.projectsInCategorie)
-                    .map(key=>this.projectsInCategorie[key])
-                    .filter(projects=>projects.filter(prj=>prj.id===project_id).length>0)
-                    .map(projects=>projects[0])[0];
+                    .flatMap(key=>this.projectsInCategorie[key])
+                    .filter(prj=>prj.id===project_id)[0];
     }
     setProjectsWorkDetails(project:Project,workInfo:WorkDetails,newValue:string){
         const idx= this.projectsWorkDetails[project.id].findIndex(info=>info.infoId===workInfo.id);
@@ -158,6 +290,9 @@ class ProjectObjectStore {
     isProjectHaveIssues(project_id:number, status_id:number):boolean{
         return this.getProjectIssues(project_id,status_id).length>0
     }
+    addProjectIssue(project_id:number,issue:IssueDto){
+        this.projectsIssues[project_id] =[...this.projectsIssues[project_id], issue];
+    }
     getProjectIssues(project_id:number,id_status?:number):IssueDto[]{
         const issues =  this.projectsIssues[project_id] || [];
         return issues.filter(issue=>issue.stepStatusId ===id_status);
@@ -172,8 +307,8 @@ class ProjectObjectStore {
                 this.projectsBOQ[dto.id] = dto.boq
                 this.projectsWorkDetails[dto.id] = dto.workDetails
                 this.projectsLocalisaion[dto.id] = dto.localisation;
-                this.projectsSquad[dto.id] = dto.squad;
-                this.projectsToolsUsage[dto.id] = dto.toolsUsage;
+                this.projectsReports[dto.id] = dto.reports;
+                this.clients[dto.id] = dto.client;
                 this.setProjectAuthorization(dto.id,dto.authorization);
                 this.projectsIssues[dto.id]= dto.issues? dto.issues.filter(issue=>!issue.isClosed) :[];
                  if(this.projectsInCategorie[dto.category.id.toString()]){
@@ -186,12 +321,24 @@ class ProjectObjectStore {
         })
         
     }
-    getCategorie(categorie:string){
-        return this.projectsInCategorie[categorie] || [];
+    getCategorie(id_step:number,categorie:string){
+        const projects = this.projectsInCategorie[categorie] || [];
+        if(id_step>0)
+            return projects.filter(p=>p.id_step===id_step)
+        else
+          return projects;
+    }
+
+     getProjectUpdate(currentProject:Project,response:StatusUpdateResponseDto) :Project{
+        return {...currentProject , 
+            stepStatus:{id:response.stepStatusId,title:response.stepStatusTitle} ,
+            id_step_status:response.stepStatusId,
+            id_step:response.stepId,
+            step:{id:response.stepId,title:response.stepTitle}
+        }
     }
     updateProject(project:Project) {
 
-        project.title = project.title +" "+project.id_step+" /"+project.id_step_status
         const projects = this.projectsInCategorie[project.id_categorie.toString()]
         const index = projects.findIndex(proj => proj.id === project.id);
         if(index > -1){

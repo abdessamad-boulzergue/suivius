@@ -8,21 +8,22 @@ import TSSComponent from './TSSComponent';
 import TravauxComponent from './TravauxComponent';
 import DocumentSelectorDisplay from './DocumentPicker';
 import { DOC_TYPES } from '../constants';
+import PrestationProjet from '../components/PresentationProjet';
+import CroquisComponent from './CroquisComponent';
+import TssPhotoComponent from './TssPhotoComponent';
 
 const Tab = createMaterialTopTabNavigator();
 
 export default function EtudeReportScreen({route}:any) {
 
-    const project = route.params?.project;
+    const project = route.params.project;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-            <Image
-              style={styles.headerImage}
-              source={inwi.imageSource}
-            />
-            <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
+           
+           <PrestationProjet project = {project}></PrestationProjet>
+           
         </View>
       <Tab.Navigator
       >
@@ -38,14 +39,13 @@ export default function EtudeReportScreen({route}:any) {
             project:project
           }}
         />
-        <Tab.Screen name="Croquis" component={DocumentSelectorDisplay} 
+        <Tab.Screen name="Croquis" component={CroquisComponent} 
         options={commonTopBarOptions}
           initialParams={{ 
             project:project,
-            type:DOC_TYPES.CROQUIS
           }}
         />
-        <Tab.Screen name="Photos" component={ImageGrid} 
+        <Tab.Screen name="Photos" component={TssPhotoComponent} 
         options={commonTopBarOptions}
           initialParams={{ 
             project:project
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    height:"20%"
+    height:210
   },
   headerImage: {
   },

@@ -3,14 +3,19 @@ import { Button, View, Text, Image } from 'react-native';
 import DocumentPicker, { DocumentPickerResponse } from 'react-native-document-picker';
 import RNFS from 'react-native-fs';
 import { Project } from '../database/dao/ProjectDao';
-import { useDao } from '../stores/context';
+import { useDao, useStores } from '../stores/context';
 import { projectObjectStore } from '../stores/objectsStore';
 
-export default function DocumentSelectorDisplay({route,type}:any) {
+export default function DocumentSelectorDisplay({route , style}:any) {
+    style = style || {};
     const [image, setImage] = useState<string|null>(null);
     const  {documentDao} = useDao();
     const project :Project= route.params?.project;
     const DOC_TYPE= route.params?.type
+    const {rightsStore} = useStores()
+    const canedit        = rightsStore.hasPermission(project.id_step,project.id,"EDITER_APD") ||  rightsStore.hasPermission(project.id_step,project.id,"EDITER_TSS")  ;
+    const canValidate = rightsStore.hasPermission(project.id_step,project.id,'PRE_VALIDATION_APD') || rightsStore.hasPermission(project.id_step,project.id,'PRE_VALIDATION_TSS');
+    
 
     const  getDocument= async () => {
       const docs = await documentDao.getByIdProjectAndType(project.id,DOC_TYPE);
@@ -63,11 +68,14 @@ export default function DocumentSelectorDisplay({route,type}:any) {
   getDocument();
 
   return (
-    <View >
-      <Button title="Select File" onPress={selectFile} />
-      <View  style={{alignItems:"center", width: "100%", height: "90%" ,padding:10}}>
-      {image && <Image source={{ uri: image }} style={{ width: "100%", height: "100%" }} />}
-    </View>
+    <View style={style}>
+      {canedit && canValidate && (<>
+        <Button title="Select File" onPress={selectFile} />
+        <View  style={{alignItems:"center", width: "100%", height: "100%" ,padding:5}}>
+        {image && <Image source={{ uri: image }} style={{ width: "100%", height: "100%" }} />}
+      </View>
+      </>
+    )}
     </View>
   );
 };

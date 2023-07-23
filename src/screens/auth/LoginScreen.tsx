@@ -39,7 +39,7 @@ interface LoginState {
         isLoading:false,
         liked:false,
         username:'test',
-        password:'pass',
+        password:'test',
         
     });
 
@@ -71,8 +71,12 @@ interface LoginState {
             setState({...state,isLoading: true});
             //this.props.navigation.navigate(ROUTES.HOMESTACK);
            // await loginStore.regularLogin({username: userName, password});
-            await loginStore.regularLogin(user)
-            setState({...state,isLoading: false});
+             loginStore.regularLogin(user).then(()=>{
+                setState({...state,isLoading: false});
+             }).catch(()=>{
+                setState({...state,isLoading: false , error:"echec de connexion"});
+             })
+            
 
         }else{
             console.log("user not valide : "+JSON.stringify(user));
@@ -115,8 +119,10 @@ interface LoginState {
                            source={imgLogo.imageSource}
                        />
 
-                       <View style={{width:'80%',marginBottom:25,marginTop:65}}>
-                            <Text style={{fontFamily:'Inter',fontWeight:'400',fontSize:15,lineHeight:19}}>Entrez vos coordonnées pour vous connecter à votre compte</Text>
+                       <View style={{width:'85%',marginBottom:25,marginTop:65,alignContent:'center'}}>
+                            <Text style={{fontFamily:'Inter',color:'white',textAlign:'center',fontWeight:'400',fontSize:16,lineHeight:19}}>
+                                Entrez vos coordonnées pour vous connecter à votre compte
+                            </Text>
                        </View>
                        <View style={styles.SectionStyle}>
                         <TextInput
@@ -140,6 +146,7 @@ interface LoginState {
                     />
                  </View>
                 <View style={styles.SectionStyle}>
+                    
                   <TextInput
                         style={styles.input}
                         textContentType="password"
@@ -153,13 +160,11 @@ interface LoginState {
                     />
                 </View>
                      
-                {state.error && (
-                    <TextInput style={{color:'red'}}> {state.error }</TextInput>
-                )}
+                
                 {state.isLoading ? (
                     <ActivityIndicator size="small" color="#000000"/>
                 ):
-                 <LoginButton style={{margin:15}} onPress={ ()=>onPressLogin() } title='Connexion'>
+                 <LoginButton style={{margin:1}} onPress={ ()=>onPressLogin() } title='Connexion'>
                  </LoginButton>
                 }
             </View>
@@ -214,10 +219,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderWidth: 0.5,
         borderColor: '#000',
-        height: 45,
+        height: 47,
         width:'85%',
-        borderRadius: 20,
-        margin: 15,
+        borderRadius:22,
+        margin: 10,
     },
     ImageStyle: {
         padding: 10,

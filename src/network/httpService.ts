@@ -3,9 +3,12 @@ import {rootStore} from '../stores/context';
 import {API_URL} from '../config';
 import axios from 'axios';
 import { Alert } from 'react-native';
-import { showError } from '../components/toast';
+import { showError, showToast } from '../components/toast';
+import { asyncStorageGetItem, asyncStorageSetItem } from '../utils/cache/storage';
 
-const http = axios.create();
+const http = axios.create(
+  {timeout: 15000}
+);
 
 http.interceptors.response.use(undefined, async( error :any) => {
   if (
@@ -47,15 +50,16 @@ http.interceptors.response.use(undefined, async( error :any) => {
   }
 
 
-  return Promise.reject(error);
 });
 
-export const httpGet = async <T>(url: string, token: string | null) => {
+export const httpGet = async <T>(url: string) => {
   console.log("httpGet : ", url)
+  const token: string = await asyncStorageGetItem("userToken");
   return await http.get<T>(url, {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      Authorization: "Bearer "+token,
     },
   }).then(response=>  response.data)
   .catch(err=>{
@@ -63,26 +67,31 @@ export const httpGet = async <T>(url: string, token: string | null) => {
   });
 };
 
-export const get= async(url:string,token: string | null)=>{
+export const get= async(url:string)=>{
+  console.log("httpGet : ", url)
+  const token: string = await asyncStorageGetItem("userToken");
   return http.get(url, {
       method: 'GET',
       withCredentials: true,
       headers:{
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          Authorization: token,
       },
   }).catch(err=>{
     console.log("http get error : " , err)
  });
 }
 
-export const httpPost = async<T>(url: string, body: any, token: string) => {
+export const httpPost = async<T>(url: string, body: any,token?:string) => {
   console.log("httpPost : ", url)
+  showToast("post : " +url +" " + Object.keys(body)+" , "+token)
+
   return await http.post<T>(url, body, {
     headers: {
       'Accept-Encoding': 'gzip, deflate, br',
       'Content-Type': 'application/json',
-      Authorization: token,
+      Authorization: "Bearer "+token,
     },
   });
 };
@@ -98,12 +107,12 @@ export const httpDelete = async (url:string, token:string) => {
 };
 export const sendFileToServer = async (url:string,formData:FormData) => {
   try {
-    const fileUri = 'file:///data/user/0/com.suivius/cache/Camera/4b3f3f6a-a26b-4eee-98a8-f5c772417700.jpg'; // Replace with the actual file URI
-
+    console.log("sendFileToServer : ", url)
+    const token: string = await asyncStorageGetItem("userToken");
     const response = await http.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: 'your_token', // Replace with the authorization token if required
+        Authorization: 'Bearer '+token, 
       },
       onUploadProgress: (progressEvent:any) => {
         const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
@@ -121,14 +130,15 @@ export const sendFileToServer = async (url:string,formData:FormData) => {
     }
   }
 };
-export const httpUpload = async (url:string, body:any, token:string, onProgress:Function) => {
-  console.log(url)
+export const httpUpload = async (url:string, body:any , onProgress:Function) => {
+  console.log("httpUpload : ", url)
+  const token: string = await asyncStorageGetItem("userToken");
   return await http.post(url, body, {
     headers: {
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate, br',
       'Content-Type': 'multipart/form-data',
-      Authorization: token,
+      Authorization: "Bearer "+token,
     },
     onUploadProgress: (ev:any) => {
       const progress = (ev.loaded / ev.total) * 100;
@@ -137,11 +147,12 @@ export const httpUpload = async (url:string, body:any, token:string, onProgress:
   });
 };
 
-export const httpPut = async (url: string, body: any, token: string) => {
+export const httpPut = async (url: string, body: any) => {
+  const token: string = await asyncStorageGetItem("userToken");
   return await axios
     .put(url, body, {
       headers: {
-        Authorization: token,
+        Authorization: "Bearer "+token,
         'Accept-encoding': 'gzip, deflate',
       },
     })
@@ -152,17 +163,18 @@ export const httpPut = async (url: string, body: any, token: string) => {
 
 export const httpUploadPut = async (
   url: string,
-  body: any,
-  token: string,
+  body: any, 
   onProgress: (progress: number) => void,
 ) => {
+  console.log("httpUpload : ", url)
+  const token: string = await asyncStorageGetItem("userToken");
   return await http.put(url, body, {
     headers: {
       Accept: 'application/json',
       'Accept-Encoding': 'gzip, deflate, br',
 
       'Content-Type': 'multipart/form-data',
-      Authorization: token,
+      Authorization: "Bearer "+token,
     },
     onUploadProgress: (ev:any) => {
       const progress = (ev.loaded / ev.total) * 100;

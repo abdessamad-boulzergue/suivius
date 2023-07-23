@@ -1,6 +1,8 @@
+import { parse } from "date-fns";
 import { Project } from "../../database/dao/ProjectDao";
 import { SuiviePermission } from "../../database/types";
 import { PermissionDto, ProjectDto } from "../types";
+import { SIMPLE_DATE_FORMAT } from "../../constants";
 
 export const projectToDto=(project:Project):ProjectDto| null =>{
     return null
@@ -32,10 +34,12 @@ export const dtoToProject=(dto:ProjectDto):Project =>{
         id_step_status:dto.stepStatus.id,
         title:dto.title,
         description:'',
-        debut_estime:new Date(),
+        debut_estime:parse(dto.estimateStart,SIMPLE_DATE_FORMAT,new Date()),
         debut_reel:new Date(),
-        fin_estime:new Date(),
+        fin_estime:parse(dto.estimateEnd,SIMPLE_DATE_FORMAT,new Date()),
         fin_reel:new Date(),
-        id_tss:null
+        id_tss:null,
+        stepStatus:dto.stepStatus,
+        step:dto.step
     }
 }

@@ -15,6 +15,7 @@ const InputSearch=({value,placeholder,onSearch}:any)=>{
                 style={innerStyle?.input}
                 onChangeText={(text:string)=>setTextValue(text)}
                 placeholder={placeholder}
+                placeholderTextColor="#999999"
                 value = {textValue}
             />
           <Button style={styles.searchBtn} onPress={()=>onSearch(textValue)}> <Icon size={20} name="search"/> </Button>
@@ -28,22 +29,23 @@ export default InputSearch;
 
 const styles = StyleSheet.create({
     searchBtn:{
-        borderRadius:10,
-        color:"#fff",
-        width:55,
-        height:45
+        borderRadius:7,
+        backgroundColor:"#326972",
+        width:42,
+        height:40,
+        margin:5
     },
 
     input: {
         flex: 1,
-        height:45,
-        color:"#000"
+        height:35,
+        color:"#000",
 
     },
     container: {
         flexDirection: 'row',
+        backgroundColor:'#F8FCFC',
         alignItems: 'center',
-        borderWidth: 0.5,
         height: 45,
         borderRadius: 15,
         margin: 10,

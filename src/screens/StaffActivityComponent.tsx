@@ -1,91 +1,30 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Text,  TouchableOpacity,StyleSheet, SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView, Modal, FlatList, Image
+    Text,StyleSheet, SectionList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView, Modal, FlatList, Image
 } from 'react-native';
-import { Button } from 'native-base';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-
+import { Button } from 'native-base';
+import { plus_circle_outlined } from '../assets';
 import SuiviInputDate from '../components/InputDate';
 import InputSearch from '../components/InputSearch';
 import { Project } from '../database/dao/ProjectDao';
 import { useDao } from '../stores/context';
-import { Work } from '../database/dao/WorkDao';
-import { TABLES } from '../database/dao/constants';
 import { format } from 'date-fns';
-import { StaffMember } from '../database/dao/StaffDao';
-import { CardSection, Input } from '../components/common';
 import SButton from '../components/common/SButton';
-import { SquadDto } from '../services/types';
+import { ReportDto, SquadDto } from '../services/types';
 import { projectObjectStore } from '../stores/objectsStore';
-import {SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
+import {ROUTES, SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
 import { ModalList, ModalListItem } from '../components/ModalList';
+import { showAlert } from '../components/toast';
+import ReportEditionValidation from '../components/ReportEditionValidation';
+import { observer } from 'mobx-react-lite';
 interface ListItem{
     
 }
 
-export const ModalStaff =({pages,visible, onClose}:any)=> {
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
-    const [staffPage, setStaffPage] = useState<Array<{title:string,data:Array<StaffMember>}>>(pages || []);
+const StaffActivityComponent = observer(({route,navigation}:any) => {
 
-    const [selectedMember, setSelectedMember] = useState<Array<StaffMember>>([]);
-
-    onClose = onClose || (()=>{});
-    useEffect(()=>{
-        setModalVisible(visible)
-        setStaffPage(pages)
-    },[visible,pages])
-
-    const closeModal=()=>{
-        onClose(selectedMember)
-        setSelectedMember([])
-    }
-    const onLongPress = (item:StaffMember) => {
-        console.log(item)
-        setSelectedMember((prevSelectedMember) => [...prevSelectedMember, item]);
-      };
-      const isItemSelected = (item:StaffMember) => {
-        return selectedMember.some(member => member.id === item.id);
-      };
-    
-        return (
-                <Modal
-                    style={{margin: 30, width:120,height:80}}
-                    animationType="slide"
-                    transparent={false}
-                    visible={modalVisible}
-                    onRequestClose={() => { }}>
-                    <View style={{margin: 22}}>
-                        <SectionList sections={staffPage}
-                            renderItem={({item}:{item: StaffMember}) =>{ 
-                                
-                                return(
-                                    <TouchableOpacity onLongPress={() => onLongPress(item)}>
-                                        <CardSection style={{backgroundColor: isItemSelected(item) ? "#aeaebe" : "#ffffff"}}>
-                                        <Input label="name" value={ item.name } editable={false} />
-                                        </CardSection>
-                                    </TouchableOpacity>
-                                    
-                                )
-                            }}
-                            ItemSeparatorComponent={()=> <View style={styles.separator} />}
-
-                            keyExtractor={(item, index) => index.toString()}
-                             />
-                    </View>
-                    <View style={{flexDirection:"row", justifyContent:"space-evenly"}}>
-                    <SButton  style={{ color:"#E55959",height:50,alignSelf:"center", backgroundColor:"transparent", width:"40%", }} title="fermer" 
-                        onPress={()=>onClose([])}></SButton>
-                        <SButton  style={{ alignSelf:"center", height:50,  width:"50%", }} title="Ajouter" 
-                        onPress={closeModal}></SButton>
-                    </View>
-                </Modal>
-        );
-    
-}
-
-const StaffActivityComponent = ({route,navigation}:any) => {
-
+    const  report:ReportDto = route.params.report;
     const  project:Project = route.params.project;
     const {workDao,projectDao} = useDao();
     const [squad, setSquad] = useState<SquadDto[]>([]);
@@ -98,7 +37,7 @@ const StaffActivityComponent = ({route,navigation}:any) => {
           setStaff(staffData.map(data=>{
             return { id:data.id, title:data.name}
           }))
-     const squadData =  projectObjectStore.getProjectsSquad(project)
+     const squadData =  projectObjectStore.getProjectsSquad(project,report.uid)
      setSquad(squadData);
     },[])
     const  getStaffWOrk= () => {
@@ -109,21 +48,28 @@ const StaffActivityComponent = ({route,navigation}:any) => {
         );
     }
     const  filterStaff= async (name:string) => {
-
-         setModalVisible(true)
-
+        const squadData =  projectObjectStore.getProjectsSquad(project,report.uid)
+        if(name)
+           setSquad(squadData.filter(squad=>squad.name.indexOf(name)!=-1));
+        else 
+            setSquad(squadData);
     }
-    const getDate=(time:string):Date=>{
+    const getDate=(time:string):Date|undefined=>{
+        if(time==null)  time="00:00";
         const [hours, minutes] = time.split(':').map(Number);
         const date = new Date(); // Create a new Date object
         date.setHours(hours||0, minutes||0);
         return date;
     }
     const sendSquadWork =()=>{
-        const squadWork = projectObjectStore.getProjectsSquad(project)
-         
-        console.log(squadWork)
-         projectDao.sendSquadWork(project.id,squadWork)
+        projectDao.sendReport(project.id,report).then(reportUpdate=>{
+            if(reportUpdate ){
+              projectObjectStore.updateReport(project,{...report})
+              showAlert("Rapport d'activité","est envoyé",()=>{
+                navigation.navigate(ROUTES.WORK_REPPORTS)
+            })
+            }
+          });
     }
    const  addStaffWork=(staff:Array<ModalListItem>)=>{
         setModalVisible(false)
@@ -134,41 +80,34 @@ const StaffActivityComponent = ({route,navigation}:any) => {
                 memberId:member.id,
                 normalHours:"",
                 additionalHours:"",
-                date: format(new Date(),SIMPLE_TIME_FORMAT)
+                date: report.date
             }
         })
         setSquad([...squad, ...squadWork])    
-        projectObjectStore.setProjectsSquad(project,[...squad,...squadWork])       
-
+        projectObjectStore.setProjectsSquad(project,report.uid,[...squad,...squadWork])       
     }
 
         const setNormalHours = (date:Date,id_staff:number)=>{
             const index = squad.findIndex(it=>it.memberId===id_staff) 
             const update :SquadDto = {
-                additionalHours :squad[index].additionalHours,
-                normalHours:format(date,SIMPLE_TIME_FORMAT),
-                memberId: squad[index].memberId,
-                date : format(new Date(),SIMPLE_DATE_FORMAT),
-                name: squad[index].name
+                ...squad[index], 
+                normalHours:format(date,SIMPLE_TIME_FORMAT)
             }
 
             const squadUpdate = [ ...squad.slice(0,index),update, ...squad.slice(index+1)]
             setSquad(squadUpdate);
-            projectObjectStore.setProjectsSquad(project ,squadUpdate)
+            projectObjectStore.setProjectsSquad(project ,report.uid,squadUpdate)
         }
     const setAditionalHours =(date:Date,id_staff:number)=>{
         const index = squad.findIndex(it=>it.memberId===id_staff) 
-        const update :SquadDto = {
-            additionalHours :format(date,SIMPLE_TIME_FORMAT),
-            normalHours:squad[index].normalHours,
-            memberId: squad[index].memberId,
-            date : format(new Date(),SIMPLE_DATE_FORMAT),
-            name: squad[index].name
-        }
+            const update :SquadDto = {
+                ...squad[index], 
+                additionalHours:format(date,SIMPLE_TIME_FORMAT)
+            }
 
-        const squadUpdate = [ ...squad.slice(0,index),update, ...squad.slice(index+1)]
-        setSquad(squadUpdate);
-        projectObjectStore.setProjectsSquad(project ,squadUpdate)
+            const squadUpdate = [ ...squad.slice(0,index),update, ...squad.slice(index+1)]
+            setSquad(squadUpdate);
+            projectObjectStore.setProjectsSquad(project ,report.uid,squadUpdate)
     }
   const renderSeparator = () => {
     return <View style={styles.separator} />;
@@ -176,13 +115,19 @@ const StaffActivityComponent = ({route,navigation}:any) => {
 
 
         return (
-            <View style={{flex: 1,}}>
+            <View style={{flex: 1}}>
                 <View style={styles.dropdownContainer}>
-                    <Text style={styles.label}>rechercher collaborateur :</Text>
                         <InputSearch onSearch={(text:string)=> {
                             filterStaff(text)
                         }} 
                             value="" placeholder="recherher un collaborateur"></InputSearch>
+                    <Button onPress={()=>setModalVisible(true)}  style={{alignSelf:'flex-end', backgroundColor:"transparent",
+                    borderWidth:0.5, borderRadius:6, height:25}} >
+                        <View style={{ flexDirection:'row',width:75, alignItems:'center' ,justifyContent:'space-between' }}>
+                    <Image source={plus_circle_outlined.imageSource} style={{width:15,height:15}} />
+                    <Text style={{color:"#326972", height:20 }}>Ajouter</Text>
+                    </View>
+                    </Button>
                 </View>
 
                 <ModalList data={staff} visible={modalVisible} onClose={addStaffWork} ></ModalList>
@@ -211,12 +156,12 @@ const StaffActivityComponent = ({route,navigation}:any) => {
                     ItemSeparatorComponent={renderSeparator}
 
                     />
-                 <SButton  style={{ alignSelf:"center", height:50,  width:"60%",margin:15 }} title="Envoyer" 
-                        onPress={ sendSquadWork }></SButton>
+                    
+          <ReportEditionValidation report={report} project={project} navigation={navigation}/>
             </View>
         );
     
-}
+})
 const window = Dimensions.get('window')
 const styles = StyleSheet.create({
     dropdown: {
@@ -237,7 +182,7 @@ const styles = StyleSheet.create({
     },
       dropdownContainer: {
         margin: 20,
-        marginBottom:0
+        marginBottom:10
       },
       label: {
         fontSize: 16,
@@ -277,10 +222,12 @@ const styles = StyleSheet.create({
         fontSize:15,
     },
     listItem:{
-    flex:1,
+     flex:1,
      flexDirection:'row',
      padding:10,
      alignItems: 'center',
+     backgroundColor: '#FFFFFF',
+     height: 65, 
     },
     listItemImage:{
         width:'98%',

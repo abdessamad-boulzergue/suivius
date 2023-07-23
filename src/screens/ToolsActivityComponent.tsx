@@ -6,7 +6,7 @@ import {
 import SuiviInputText from '../components/InputText';
 import SuiviInputDate from '../components/InputDate';
 import ProjectDao, { Project } from '../database/dao/ProjectDao';
-import { useDao } from '../stores/context';
+import { useDao, useStores } from '../stores/context';
 import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
 import WorkToolsUsageDao from '../database/dao/WorkToolsUsageDao';
@@ -16,10 +16,12 @@ import { TABLES } from '../database/dao/constants';
 import SButton from '../components/common/SButton';
 import { projectObjectStore } from '../stores/objectsStore';
 import { observer } from 'mobx-react-lite';
-import { ToolDto, ToolUsageDto } from '../services/types';
-import { SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
+import { ReportDto, ToolDto, ToolUsageDto } from '../services/types';
+import { ROUTES, SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from '../constants';
 import { SIMPLE_DATE_TIME_FORMAT } from '../constants';
 import { ModalList, ModalListItem } from '../components/ModalList';
+import { showAlert } from '../components/toast';
+import ReportEditionValidation from '../components/ReportEditionValidation';
 
 
 interface ListOverViewState {
@@ -32,10 +34,17 @@ const ToolsActivityComponent = observer( ({route,navigation}:any) => {
 
      const [modalVisible, setModalVisible] = useState<boolean>(false);
      const [tools,setTools] = useState<ModalListItem[]>([])
+     const {rightsStore} = useStores()
+  
 
     const  project:Project = route.params.project;
-    const {workToolsUsageDao, projectDao} = useDao();
+    const  report:ReportDto = route.params.report;
+    const { projectDao} = useDao();
     const [toolUsage, setToolUsage] = useState<ToolUsageDto[]>([]);
+
+    const canedit     = rightsStore.hasPermission(project.id_step,project.id,"EDIT_REPORT") && report.status!=="VALID";
+    const canValidate = rightsStore.hasPermission(project.id_step,project.id,'VALIDATE_REPORT') && report.status!=="VALID";
+   
 
     useEffect(()=>{
       const tools = projectObjectStore.getTools();
@@ -43,38 +52,49 @@ const ToolsActivityComponent = observer( ({route,navigation}:any) => {
           setTools(tools.map(data=>{
             return {...data}
           }))
-        const usages = projectObjectStore.getProjectsToolsUsage(project)
+        const usages = projectObjectStore.getProjectsToolsUsage(project,report.uid)
         if(usages){
           setToolUsage(usages)
         }
     },[])
 
-    const getDate=(time:string):Date=>{
+    const getDate=(time:string):Date | undefined=>{
+      if(!time) time="00:00"
         const [hours, minutes] = time.split(':').map(Number);
         const date = new Date(); // Create a new Date object
         date.setHours(hours||0, minutes||0);
         return date;
+      
     }
   const renderSeparator = () => {
     return <View style={styles.separator} />;
   };
-  
-  const sendToolUsage =()=>{
-    const usages = projectObjectStore.getProjectsToolsUsage(project)
-     projectDao.sendToolUsage(project.id,usages)
+
+  const validateReport =()=>{
+    report.status="VALID";
+    projectDao.sendReport(project.id,report).then(reportUpdate=>{
+      if(reportUpdate ){
+        projectObjectStore.updateReport(project,{...report,status:"VALID"})
+        showAlert("Rapport d'activité","est validé",()=>{
+          navigation.navigate(ROUTES.WORK_REPPORTS)
+      })
+      }
+    });
   }
+
+
   const  addTool=(tools:Array<ModalListItem>)=>{
     setModalVisible(false)
     const newTools :ToolUsageDto[ ]= tools.filter(tool=> toolUsage.length===0 || toolUsage.find(it=>it.toolId===tool.id)===undefined)
                                       .map(tool=>{
-                                        return { date: format(new Date(),SIMPLE_DATE_FORMAT), 
+                                        return { date: report.date, 
                                                  title:tool.title,
                                                  timeUsage:'',
                                                  toolId:tool.id
                                                 }
                                       })
       setToolUsage([...toolUsage,...newTools]);
-      projectObjectStore.setProjectsToolsUsage(project,[...toolUsage,...newTools])       
+      projectObjectStore.setProjectsToolsUsage(project,report.uid,[...toolUsage,...newTools])       
   }
   const filterTools=(title:string)=>{
     setModalVisible(true);
@@ -82,31 +102,24 @@ const ToolsActivityComponent = observer( ({route,navigation}:any) => {
   const onDateChange =(date:Date,tool:ToolUsageDto)=>{
     const index = toolUsage.findIndex(usage=> usage.toolId ==tool.toolId);
     let   usages :ToolUsageDto[] = [];
-    const update:ToolUsageDto= { toolId:tool.toolId,
-                                  title :tool.title, 
-                                  timeUsage : format(date,SIMPLE_TIME_FORMAT),  
-                                  date : format(new Date(),SIMPLE_DATE_FORMAT)
+    const update:ToolUsageDto= { ...toolUsage[index],
+                                  timeUsage : format(date,SIMPLE_TIME_FORMAT)
                                 }
 
        usages  = [ ...toolUsage.slice(0,index),update, ...toolUsage.slice(index+1)]
     
-    console.log("tool ", tool,"  index ",usages)
-    setToolUsage(usages)
-    projectObjectStore.setProjectsToolsUsage(project,usages)
+     setToolUsage(usages)
+    projectObjectStore.setProjectsToolsUsage(project,report.uid,usages)
 
-    /*const fields :{[key:string]:any} ={};
-    fields[key]=format(date,"HH:mm");
-    workToolsUsageDao.updateDate(project.id,id_tool,fields)*/
 }
 
         return (
             <View style={{flex: 1,}}>
                 <View style={styles.dropdownContainer}>
-                <Text style={styles.label}>rechercher collaborateur :</Text>
                         <InputSearch onSearch={(text:string)=> {
                             filterTools(text)
                         }} 
-                            value="" placeholder="recherher un collaborateur"></InputSearch>
+                            value="" placeholder="recherhe"></InputSearch>
                 </View>
 
                 <ModalList data={tools} visible={modalVisible} onClose={addTool} ></ModalList>
@@ -127,10 +140,10 @@ const ToolsActivityComponent = observer( ({route,navigation}:any) => {
                 keyExtractor={(item, index) => index.toString()}
                
                 ItemSeparatorComponent={renderSeparator}
+                />
+   
+             <ReportEditionValidation report={report} project={project} navigation={navigation}/>
 
-                 />
-                 <SButton  style={{ alignSelf:"center", height:50,  width:"60%",margin:15 }} title="Envoyer" 
-                        onPress={()=>sendToolUsage()}></SButton>
             </View>
         );
     
@@ -155,7 +168,7 @@ const styles = StyleSheet.create({
     },
       dropdownContainer: {
         margin: 20,
-        marginBottom:0
+        marginBottom:10
       },
       label: {
         fontSize: 16,
@@ -200,6 +213,8 @@ const styles = StyleSheet.create({
      padding:10,
      justifyContent:'space-between',
      alignItems: 'center',
+     backgroundColor: '#FFFFFF',
+      height: 65
     },
     listItemImage:{
         width:'98%',

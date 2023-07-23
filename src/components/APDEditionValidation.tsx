@@ -2,11 +2,11 @@ import { View } from "react-native";
 import SButton from "./common/SButton";
 import { Project } from "../database/dao/ProjectDao";
 import { useDao, useStores } from "../stores/context";
-import { AUTORISATION_STATUS, ETUDE_STATUS, ROUTES } from "../constants";
-import { useState } from "react";
+import {  ETUDE_STATUS, ROUTES } from "../constants";
 import { projectObjectStore } from "../stores/objectsStore";
 import { observer } from "mobx-react-lite";
-
+import { showAlert } from "./toast";
+import { StatusUpdateResponseDto } from "../database/types";
 
 const  APDEditionValidation= observer(({project,navigation}:{project:Project,navigation:any})=>{
     const {rightsStore} = useStores()
@@ -18,24 +18,33 @@ const  APDEditionValidation= observer(({project,navigation}:{project:Project,nav
     const canValidate    = rightsStore.hasPermission(currentProject.id_step,currentProject.id,'PRE_VALIDATION_APD') && currentProject.id_step_status ===ETUDE_STATUS.PRE_VALIDATION_APD;
    
     const validateAPD = ()=>{
-        projectDao.validateAPD(currentProject).then((response)=>{
-            projectObjectStore.updateProject({...currentProject , id_step_status:response.stepStatusId});
+        projectDao.validateAPD(currentProject).then((response)=>{ 
+            projectObjectStore.updateProject(projectObjectStore.getProjectUpdate({...currentProject },response));
+            showAlert("validation APD","la validation est effectué",()=>{
+                navigation.navigate(ROUTES.PROJECTS)
+            })
         })
     }
     const preValidateAPD = ()=>{
-        projectDao.preValidateAPD(currentProject).then((response)=>{           
-             projectObjectStore.updateProject({...currentProject , id_step_status:response.stepStatusId});
+        projectDao.preValidateAPD(currentProject).then((response)=>{    
+            projectObjectStore.updateProject(projectObjectStore.getProjectUpdate({...currentProject },response));
+             showAlert("validation APD","la validation est effectué",()=>{
+                navigation.navigate(ROUTES.PROJECTS)
+            })
           });
     }
     const rejectAPD = ()=>{
         navigation.navigate(ROUTES.REJECT,{project:currentProject});
     }
     const sendAPD = ()=>{
-      projectDao.sendAPD(currentProject).then((response)=>{
-        console.log("new response sendAPD" , response)
-        projectObjectStore.updateProject({...currentProject , id_step_status:response.stepStatusId});
+      projectDao.sendAPD(currentProject).then((response)=>{ 
+        projectObjectStore.updateProject(projectObjectStore.getProjectUpdate({...currentProject },response));
+        showAlert(" APD","est envoyé",()=>{
+            navigation.navigate(ROUTES.PROJECTS)
+        })
       })
      }
+     
     return(
         <View style={{padding:10}}>
             { canedit && 
@@ -43,15 +52,13 @@ const  APDEditionValidation= observer(({project,navigation}:{project:Project,nav
                 <SButton disabled={canedit}  style={{ color:"#E55959",height:50,alignSelf:"center", backgroundColor:"transparent", width:"40%", }} title="Bloquer" 
                                 onPress={()=>{}}>
                             </SButton>
-                <SButton disabled={canedit} style={{ alignSelf:"center", height:50,  width:"50%", }} title="Enregistrer" 
+                <SButton disabled={canedit} style={{ alignSelf:"center", height:50,  width:"50%", }} title="Envoyer" 
                         onPress={()=>sendAPD()}></SButton>
                 </View>
             }
             { canValidate && 
-                  <View style={{flexDirection:"row",justifyContent:"space-between"}}>
-                <SButton disabled={canValidate}  style={{ color:"#E55959",height:50,alignSelf:"center", backgroundColor:"transparent", width:"40%", }} title="Bloquer" 
-                                onPress={()=>{}}>
-                            </SButton>
+                  <View style={{flexDirection:"row", alignItems:"center"}}>
+              
                 <SButton disabled={canValidate} style={{ alignSelf:"center", height:50,  width:"50%", }} title="Valider" 
                         onPress={()=>preValidateAPD()}></SButton>
                 </View>

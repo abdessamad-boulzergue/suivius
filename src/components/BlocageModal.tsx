@@ -16,7 +16,6 @@ import { IssueDto } from '../services/types';
     isNew:boolean,
     uri:string
  }
- const uniqueId = DeviceInfo.getUniqueId();
  
 
 const BlocageComponent = ({route}:any) => {
@@ -69,7 +68,11 @@ useEffect(()=>{
 },[])
 
   const addIssue = ()=>{
-    projectDao.addIssue(project.id,project.id_step_status,description);
+    projectDao.addIssue(project.id,project.id_step_status,description).then(issue=>{
+      console.log(issue,issue)
+      projectObjectStore.addProjectIssue(project.id , issue);
+      setIssue(issue);
+    });
   }
   const endIssue =()=>{
     projectDao.endIssue(project.id);
@@ -129,7 +132,7 @@ useEffect(()=>{
                     <Text style={styles.text}>propre</Text>
                 </View>
           <Text style={{color:'#000', margin:15}}> motif de blocage: </Text>
-          <TextArea style={{color:'#000', margin:15}} value={description} onChangeText={setDescription} numberOfLines={5} autoCompleteType ></TextArea>
+          <TextArea style={{color:'#000', margin:15}} value={description} onChangeText={setDescription} numberOfLines={10} autoCompleteType ></TextArea>
 
       <FlatList
         data={images}

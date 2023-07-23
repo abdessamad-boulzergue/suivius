@@ -2,20 +2,19 @@ import React, {Component, useEffect, useState} from 'react';
 import {  Text, View, Image,StyleSheet,Dimensions,
          TouchableOpacity,
 } from 'react-native';
-import {repeat ,inwi, warning} from  '../assets';
+import {repeat ,non_demarre, warning} from  '../assets';
 import { Project } from '../database/dao/ProjectDao';
 import { projectObjectStore } from '../stores/objectsStore';
 import { IssueDto } from '../services/types';
-import { ROUTES } from '../constants';
+import { ROUTES, SIMPLE_DATE_FORMAT } from '../constants';
+import { format } from 'date-fns';
 export default function ProjectOverView ({item,onView,navigation}:{navigation:any,item:Project,onView:(item:Project)=>void}){
-
+    
+    const issues = projectObjectStore.getProjectIssues(item.id,item.id_step_status);
+    const client = projectObjectStore.getClient(item.id)
       const [style,setStyle] = useState(styles)
-      const [issue,setIssue] = useState<IssueDto|undefined>(undefined)
+      const [issue,setIssue] = useState<IssueDto|undefined>(issues[0] || undefined )
       useEffect(()=>{
-        const issues = projectObjectStore.getProjectIssues(item.id,item.id_step_status);
-        if(issues){
-            setIssue(issues[0]);
-        }
       },[]);
 
       const showIssue  =()=>{
@@ -26,16 +25,27 @@ export default function ProjectOverView ({item,onView,navigation}:{navigation:an
             <TouchableOpacity onPress={()=>onView(item)}>
             <View style ={style.listItem}>
     
-            <Image source={inwi.imageSource }  style={style.listItemImage} />
+            <Image source={{uri:client?.iconContent}}  style={style.listItemImage} />
             <View  style ={style.titleGroup}>
                  <Text style ={style.listItemTitle}>{(item.title)}</Text>
-                <Text style ={style.step}>Etape : {(item.step?.title)}</Text>
+                 <Text style ={style.step}>Etape : {(item.step?.title)}</Text>
+                 <Text style ={style.status}> {(item.stepStatus?.title)}</Text>
             </View>
-             <View style={{flex: 1, flexDirection: 'row',alignItems:'center'}}>
-                    <Text style ={style.listItemDescription}>{(item.description)}</Text>
+             <View style={{flex: 1, flexDirection: 'column',alignItems:'center'}}>
+                     <Text style={style.listItemDescription} >Lorem ipsum dolor sit amet</Text>
+                    <Text style={style.date_description} >
+                        {format(item.debut_estime,SIMPLE_DATE_FORMAT)} - {format(item.fin_estime,SIMPLE_DATE_FORMAT)}
+                    </Text>
+                
              </View>
              <TouchableOpacity>
-                            <Image source={repeat.imageSource} style={styles.interactInput}/>
+                { item.id_step_status == 1 &&
+                    <Image source={non_demarre.imageSource} style={styles.interactInput}/>
+                }
+                { item.id_step_status != 1 &&
+                    <Image source={repeat.imageSource} style={styles.interactInput}/>
+                }
+                            
               </TouchableOpacity>
               {issue &&
 
@@ -63,13 +73,26 @@ const styles = StyleSheet.create({
     },
     titleGroup:{
       flexDirection:'column' ,
-      width:'40%'
     },
     step:{
         fontFamily:'Inter',
         fontSize:11,
         lineHeight:10,
         color:"#707070",
+        paddingTop:5,
+        paddingLeft:10
+    },
+    date_description:{
+        fontFamily:'Inter',
+        fontSize:10,
+        lineHeight:10,
+        color:"#707070",
+    },
+    status:{
+        fontFamily:'Inter',
+        fontSize:11,
+        lineHeight:10,
+        color:"#caca08",
         paddingTop:5,
         paddingLeft:10
     },
@@ -93,11 +116,11 @@ const styles = StyleSheet.create({
         height:30,
     },
     listItemDescription:{
+        fontFamily:'Inter',
+        fontSize:11,
+        lineHeight:11,
         color:"#707070",
-        paddingLeft:15,
-        width:'60%',
-        fontFamily: 'Inter',
-        fontWeight: '400',
+        padding:8
     },
     interactInput:{
         width:25,

@@ -1,8 +1,10 @@
-import { CableType, ConnectionType, EquipmentType, SiteType } from "../../database/types"
+import { CableType, ConnectionType, EquipmentType, SiteType, StepStatus } from "../../database/types"
 
 export interface ProjectDto {
     id: number,
     title: string,
+    estimateStart:string,
+    estimateEnd:string,
     step: {
         id: number,
         title: string
@@ -22,10 +24,19 @@ export interface ProjectDto {
     issues : IssueDto[],
     authorization:AuthorizationDto,
     squad:SquadDto[],
-    toolsUsage:ToolUsageDto[]
+    toolsUsage:ToolUsageDto[],
+    reports:ReportDto[],
+    client:ClientDto
 
 }
-
+export interface VendorDto{
+    title:string,
+    iconContent:string;
+}
+export interface ClientDto{
+    title:string,
+    iconContent:string;
+}
 export interface TssDto{
     connectionTypeId: number,
     cableTypeId: number,
@@ -56,7 +67,8 @@ export interface ProjectDocumentsContent {
 
 export interface  ArticleDto{
     id:number,
-    title:string   
+    title:string
+    unit:string   
 }
 export interface  WorkInfoDto{
     id:number,
@@ -66,9 +78,22 @@ export interface  ToolDto{
     id:number,
     title:string   
 }
+export interface  StepStatusDto{
+    id:number,
+    title:string   
+}
 export interface  StaffDto{
     id:number,
     name:string   
+}
+export interface  ReportDto{
+    uid:string,
+    userId:number,
+    date:string,
+    status:string
+    squads :SquadDto[],
+    usages:ToolUsageDto[],
+    consumes:ArticleConsumesDto[]
 }
 export interface  SquadDto{
     memberId:number,
@@ -86,11 +111,15 @@ export interface  ToolUsageDto{
 export interface AuthorizationDto{
     dateDemand:string | undefined,
     dateCommission:string | undefined,
-    dateDecision:string | undefined,
+    decision:string | undefined,
     datePayment:string | undefined,
     dateSign:string |undefined
 }
-
+export interface  LoginResponseDto {
+   token:string,
+   userId:number,
+    name:string,
+}
 export interface ReferenceDto {
 
     cableTypes:CableType[],
@@ -99,7 +128,8 @@ export interface ReferenceDto {
     siteTypes:SiteType[]
     tools :ToolDto[],
     articles:ArticleDto[],
-    staff:StaffDto[]
+    staff:StaffDto[],
+    stepStatus :StepStatusDto[]
 
 }
 export interface BoqDto{
@@ -107,6 +137,14 @@ export interface BoqDto{
      quantity: number,
      title:string,
      unite:string
+}
+export interface ArticleConsumesDto{
+    articleId : number,
+    quantity: number,
+    quantityReal: number,
+    title:string,
+    unite:string
+    date:string
 }
 export interface projectWorkDetailsDto{
     infoId: number,

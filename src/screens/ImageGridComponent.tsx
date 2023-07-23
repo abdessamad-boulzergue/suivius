@@ -15,6 +15,7 @@ import { projectObjectStore } from '../stores/objectsStore';
 const ImageGrid = ({route}:any) => {
   
     const  project:Project = route.params.project;
+    const  DOC_TYPE:string = route.params.type;
     const [images, setImages] = useState<Array<RNImage>>([{isNew:true,uri:""}]);
     const [cameraVisible, setCameraVisible] = useState<boolean>(false);
     const {documentDao} = useDao();
@@ -27,11 +28,11 @@ const ImageGrid = ({route}:any) => {
     const filePathParts = data.uri.split('/');
      const fileName = filePathParts[filePathParts.length - 1];
     setImages([...images, {isNew:false,uri:data.uri}]);
-    documentDao.addToPoject(project.id,DOC_TYPES.TSS_IMAGE,{path:data.uri,type:"image/jpeg",name:fileName})
+    documentDao.addToPoject(project.id,DOC_TYPE,{path:data.uri,type:"image/jpeg",name:fileName})
   };
 
   const  getDocument= async () => {
-    const docs = await documentDao.getByIdProjectAndType(project.id,DOC_TYPES.TSS_IMAGE);
+    const docs = await documentDao.getByIdProjectAndType(project.id,DOC_TYPE);
     if(docs && docs.length>0){
       const imgs = docs.map(doc=> { return {isNew:false,uri:doc.path}})
       setImages([ {isNew:true,uri:""},...imgs]);
@@ -93,7 +94,7 @@ useEffect(()=>{
         numColumns={3} // Change this value to change the number of images per row
         renderItem={({ item }:{item:RNImage}) => {
           return (
-            <View style={{padding:15}}>
+            <View style={{padding:15,height:100}}>
             { item.isNew && !cameraVisible &&
                  <Button style={{ width: 100, height: 100 }}
                  onPress={()=>setCameraVisible(true)}>
@@ -118,7 +119,7 @@ useEffect(()=>{
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1 ,minHeight:"85%"},
   preview: {
     margin:50
   },

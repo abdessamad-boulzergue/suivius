@@ -7,20 +7,28 @@ import SuiviInputText from "./InputText";
 import { format } from 'date-fns';
 import { SIMPLE_DATE_FORMAT, SIMPLE_TIME_FORMAT } from "../constants";
 
-const SuiviInputDate=({mode, title,date,onChange,style}:any)=>{
+const SuiviInputDate=({mode, title,date,onChange,style,validate,disabled}:any)=>{
     mode = mode || "date";
+    
+    validate = validate || ((date:Date)=>true);
     const inputPattern= mode ==='date'? SIMPLE_DATE_FORMAT :SIMPLE_TIME_FORMAT;
     const [showPicker, setShowPicker] = useState(false);
-    const [selectedDate, setSelectedDate] = useState<Date>(date || new Date());
+    const [isDisabled, setIsDisabled] = useState(disabled);
+    const [selectedDate, setSelectedDate] = useState<Date>(date);
     const [displayDate, setDisplayDate] = useState<string>(date ? format(date,inputPattern) : "");
     onChange = onChange ? onChange :()=>{};
     const handleDateChange = (event:any, newDate:any) => {
-        
+        console.log(newDate, event)
+        setShowPicker(false);
+        if(validate(newDate) && event.type==="set"){
             onChange(newDate)
-            setShowPicker(false);
             setSelectedDate(newDate)
             setDisplayDate(format(newDate,inputPattern) )
+        }
     };
+    useEffect(()=>{
+        setIsDisabled(disabled)
+    },[disabled])
 
     const showDatePicker = () => {
         setShowPicker(true);
@@ -28,12 +36,12 @@ const SuiviInputDate=({mode, title,date,onChange,style}:any)=>{
 
     return(
         <View>
-            <TouchableOpacity onPress={()=>showDatePicker()}>
+            <TouchableOpacity onPress={()=>showDatePicker()} disabled={isDisabled}>
                      <SuiviInputText editable={false} style={style} key={title} title={title} icon="calendar" value ={displayDate} ></SuiviInputText>
           </TouchableOpacity>
                 {showPicker && (
                     <DateTimePicker
-                    value={selectedDate}
+                    value={selectedDate ||  new Date()}
                     mode={mode}
                     onChange={handleDateChange}
                     />

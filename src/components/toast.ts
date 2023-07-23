@@ -1,41 +1,31 @@
 
 
-import Toast from 'react-native-toast-message';
+import { Alert } from 'react-native';
+import Toast from 'react-native-simple-toast';
+
 
 export const showToast = (
-  type: 'success' | 'error',
   title: string,
-  desc: string,
-  position: 'top' | 'bottom',
 ) => {
-  Toast.show({
-    type: type,
-    text1: title,
-    text2: desc,
-    position: position,
-  });
+  Toast.show(title,Toast.SHORT);
 };
-export const showError = (title: string, subtitle: string) => {
-  Toast.show({
-    type: 'error',
-    text1: title,
-    text2: subtitle,
-    position: 'bottom',
-  });
+export const   showAlert = (title:string, description:string , action: ()=>void) => {
+  Alert.alert(
+    title,
+    description,
+    [
+      { text: 'OK', onPress: action }
+    ]
+  );
 };
-export const showInfo = (title: string, subtitle: string) => {
-  Toast.show({
-    type: 'info',
-    text1: title,
-    text2: subtitle,
-    position: 'bottom',
-  });
-};
-export const showSuccess = (title: string, subtitle: string) => {
-  Toast.show({
-    type: 'success',
-    text1: title,
-    text2: subtitle,
-    position: 'bottom',
+export const  showError = (
+  title: string,
+  description:string
+) => {
+  Toast.showWithGravity(title + ":"+ description,Toast.LONG,
+    Toast.TOP,{
+    backgroundColor: 'blue',
+    textColor:'red',
+    
   });
 };

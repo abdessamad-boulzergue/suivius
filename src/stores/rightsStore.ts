@@ -22,10 +22,11 @@ export class RightsStore {
         .forEach(p=>p.permissions.push(permission));
     }
     hasPermission(id_step:number,id_project:number, permission:UserPermission):boolean{
-        console.log("----permission----- \n",id_step,id_project,permission, this.permissions,"--------")
+       // console.log("----permission----- \n id_step :",id_step," , id_project : "+id_project,permission," ----\n----\n", this.permissions,"--------")
         return this.permissions
                    .filter(p=>{
                     return p.step.id===id_step && p.id_project ===id_project
+                    // return p.permissions.filter(p=>permission.filter(pp=>p==pp).length>0).length>0
                    })
                     .find(p=>{
                         return p.permissions.indexOf(permission)!=-1
@@ -49,22 +50,22 @@ export class RightsStore {
         this.currentUser = currentUser;
     }
 
-    getRouteForStatus(id_status:number){
+    getRouteForStatus(project:Project ,id_status:number){
         if(id_status===1)
             return ROUTES.PROJECT_LOCALISATION;
         if(id_status===2)
             return ROUTES.PROJECT_LOCALISATION;
-        else if(id_status===ETUDE_STATUS.EDITION_TSS)
+        else if(id_status===ETUDE_STATUS.EDITION_TSS && this.hasPermission(project.id_step,project.id,"EDITER_TSS"))
            return ROUTES.ETUDE_REPORT_SCREEN;
         else if(id_status===ETUDE_STATUS.MAJ_TSS)
            return ROUTES.ETUDE_REPORT_SCREEN;
-        else if(id_status===4)
+        else if(id_status===ETUDE_STATUS.PRE_VALIDATION_TSS &&  this.hasPermission(project.id_step,project.id,"PRE_VALIDATION_TSS"))
            return ROUTES.ETUDE_REPORT_SCREEN;
         else if(id_status===5)
            return ROUTES.ETUDE_REPORT_SCREEN;
-        else if(id_status===6)
+        else if(id_status===ETUDE_STATUS.EDITION_APD && this.hasPermission(project.id_step,project.id,"EDITER_APD"))
            return ROUTES.ACTIVITY_REPORT;
-        else if(id_status===7)
+        else if(id_status===ETUDE_STATUS.PRE_VALIDATION_APD && this.hasPermission(project.id_step,project.id,"PRE_VALIDATION_APD"))
            return ROUTES.ACTIVITY_REPORT;
         else if(id_status===8)
            return ROUTES.ACTIVITY_REPORT;
@@ -72,10 +73,16 @@ export class RightsStore {
            return ROUTES.ACTIVITY_REPORT;
         else if(id_status===10)
            return ROUTES.ACTIVITY_REPORT;
-        else if(id_status===11)
-           return ROUTES.WORK_TOOLS;
-           else
-            return ""
+        else if([11,12,13,14].indexOf(id_status)!=-1)
+           return ROUTES.AUTHORIZATION;
+        else if([15].indexOf(id_status)!=-1 && this.hasPermission(project.id_step,project.id,"EDIT_REPORT"))
+           return ROUTES.WORK_REPPORTS;
+        else if([15].indexOf(id_status)!=-1 && this.hasPermission(project.id_step,project.id,"VALIDATE_REPORT"))
+            return ROUTES.WORK_REPPORTS;
+        else if([15].indexOf(id_status)!=-1)
+            return ROUTES.CONSULTATION;
+        else
+           return ROUTES.CONSULTATION;
     }
     caneValidateStatus (id_step_status:number){
         console.log("caneEditStatus > >>>>>>",id_step_status)

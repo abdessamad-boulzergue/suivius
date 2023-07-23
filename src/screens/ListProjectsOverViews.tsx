@@ -26,13 +26,15 @@ const ListProjectsOverViews =  observer(({route,navigation}:any) => {
     const {interact,categorie,key} = route.params;
     const {projectDao,stepDao} = useDao()
     const {rightsStore} = useStores();
+    const [step, setStep] = useState<number>(-1)
     const [state, setState] = useState<ListOverViewState>({
         style:styles,
         selectedOption:"",
         steps:[]
     });
     const onProjectView = (project: Project) => {
-      const route = rightsStore.getRouteForStatus(project.id_step_status)
+      
+      const route = rightsStore.getRouteForStatus(project,project.id_step_status)
       navigation.navigate(route, { project: project })
     };
 
@@ -45,16 +47,21 @@ const ListProjectsOverViews =  observer(({route,navigation}:any) => {
     }
 
     const  getAllSteps = () => {
-        stepDao.getAll()
-        .then( steps=>{ setState({...state,steps})});
+      const steps = [
+        {id:1, title:'Etude'},
+        {id:2, title:'Authorisation'},
+        {id:3, title:'Travaux'}
+      ]
+      setState({...state,steps})
     }
 
     useEffect(() => {
         getAllSteps();
       }, []);
 
-   const  onStepChange =(id_step:string)=>{
-        setState({...state,selectedOption:id_step});
+   const  onStepChange =(id_step:number)=>{
+        setStep(id_step)
+       /* setState({...state,selectedOption:id_step});
         if(id_step!="-1"){
             projectDao.getForUserByStepAndCategorie(rightsStore.currentUser.id,id_step,categorie)
             .then( projs=>{
@@ -62,7 +69,7 @@ const ListProjectsOverViews =  observer(({route,navigation}:any) => {
             });
         }else{
             getAllProjects();
-        }
+        }*/
    }
 
   const renderSeparator = () => {
@@ -76,11 +83,11 @@ const ListProjectsOverViews =  observer(({route,navigation}:any) => {
                     <View style={styles.pickerContainer}>
                           <Picker
                             style={styles.picker}
-                            selectedValue={state.selectedOption}
+                            selectedValue={step}
                             onValueChange={(itemValue) => onStepChange(itemValue)}
                             dropdownIconColor= 'black'
                         >
-                             <Picker.Item label="tous les étapes" value="-1" key="-1" />
+                             <Picker.Item label="tous les étapes" value={-1} key="-1" />
                             {
                             state.steps.map((step)=>{return (
                                 <Picker.Item label={step.title} value={step.id} key={step.id} />
@@ -89,13 +96,14 @@ const ListProjectsOverViews =  observer(({route,navigation}:any) => {
                     </Picker>
                     </View> 
                 </View>
-                <SectionList sections={[{title:"",data:projectObjectStore.getCategorie(categorie)}]}
+                <SectionList sections={[{title:"",data:projectObjectStore.getCategorie(step,categorie)}]}
                  renderItem={({item}:{item:Project}) =>{ 
-                    return(
-                            <ProjectOverView key={key} item = {item} navigation={navigation}
-                                            onView ={(vItem:any) => {   onProjectView(vItem)  }}
-                                                            />
-                            )}}
+                         return(
+                              <ProjectOverView key={key} item = {item} navigation={navigation}
+                                              onView ={(vItem:any) => {   onProjectView(vItem)  }}
+                                />
+                          )}
+                          }
                         renderSectionHeader={({section}) => {
                                         return(section.title?  (<Text style ={styles.sectionTitle}> {section.title} </Text>) : <Text/>)
                                     }}
@@ -137,10 +145,10 @@ const styles = StyleSheet.create({
       },
       picker: {
         flex: 1,
-        height: 40,
         color: '#75828A',
         backgroundColor:'#FFFFFF',
-        borderColor:'#C8CDD0'
+        borderColor:'#C8CDD0',
+        maxHeight:20
       },
       pickerItem: {
         color: 'black', // Replace with the desired color

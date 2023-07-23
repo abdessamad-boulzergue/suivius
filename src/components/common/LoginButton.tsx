@@ -17,13 +17,13 @@ export default function LoginButton({onPress,title,style}:any){
 const styles =StyleSheet.create({
     container:{
         backgroundColor:"#29626B",
-        padding:10,
+        padding:15,
         paddingLeft:20,
         paddingRight:20,
         borderColor:'#fff',
         borderWidth:1,
-        borderRadius:20,
-        width:150
+        borderRadius:25,
+        width:180
     },
     label:{
         color:"#fff",

@@ -17,7 +17,7 @@ import { observer } from "mobx-react-lite";
 import SButton from '../components/common/SButton';
 import { projectObjectStore } from '../stores/objectsStore';
 import { ETUDE_STATUS, ROUTES } from '../constants';
-import { showError } from '../components/toast';
+import { showAlert, showError } from '../components/toast';
 type RootStackParamList = {
     InfoProjectScreen: { project: Project }; 
 };
@@ -37,11 +37,9 @@ const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     });
-    const{localisationDao} = useDao();
     const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
     const [project, setProject] = useState<Project>(route.params?.project)
     const [currentPosition, setCurrentPosition] = useState<LatLng|null>(null);
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
 
    useEffect(()=>{
     watchPosition();
@@ -93,8 +91,8 @@ const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
     getLocalisation((latLng)=>{
             projectDao.startStudy(project.id)
             .then(response=>{
-                projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
-                setProject(  {...project, id_step_status:response.stepStatusId});
+                projectObjectStore.updateProject( projectObjectStore.getProjectUpdate({...project},response));
+                setProject(projectObjectStore.getProjectUpdate({...project},response));
             })
         })
    }
@@ -103,24 +101,15 @@ const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
         getLocalisation((latLng)=>{
             projectDao.startTssEditionEdition(project.id,latLng)
             .then(response=>{
-                projectObjectStore.updateProject(  {...project, id_step_status:response.stepStatusId});
-                setProject(  {...project, id_step_status:response.stepStatusId});
+                projectObjectStore.updateProject( projectObjectStore.getProjectUpdate({...project},response));
+                setProject(projectObjectStore.getProjectUpdate({...project},response));
+                showAlert("Projet : "+project.title," est demaré  ",()=>{
+                    navigation.navigate(ROUTES.ETUDE_REPORT_SCREEN,{project:project})
+                })
+               
             })
         })
    }
-   const xstartTssEditionEdition=async ()=>{
-    getLocalisation((latLng)=>{
-        projectDao.toStepStatus(ETUDE_STATUS.EDITION_TSS,project.id)
-        .then(projectUpdate=>{
-            setProject(projectUpdate)
-            projectObjectStore.updateProject(projectUpdate);
-        })
-    })
-    
-
-
-   }
-
    return(
             <View style={styles.container}>
                 <View style={styles.info}>
@@ -160,11 +149,12 @@ const  LocalisationProjectScreen = observer(({navigation,route}:any) => {
                     </MapView>
                 </View>
                 <View >
-                <View style={{flexDirection:"row",justifyContent:"space-between"}}>
+                
                     {project.id_step_status === 1 &&
-                     <SButton style={{ alignSelf:"flex-start", width:"50%", }} title="demarrer" 
+                     <SButton style={{ alignSelf:"center", width:"70%", }} title="demarrer" 
                      onPress={startStudy}></SButton>
                     }
+                <View style={{flexDirection:"row",justifyContent:"space-between"}}>
                     {project.id_step_status !== 1 &&
                         <SButton style={{ color:"#E55959",alignSelf:"flex-end", backgroundColor:"transparent", width:"40%", }} title="Bloquer" 
                                 onPress={()=>{ navigation.navigate(ROUTES.BLOCAGE,{project:project})}}>

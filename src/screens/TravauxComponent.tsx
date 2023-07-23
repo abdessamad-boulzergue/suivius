@@ -48,10 +48,7 @@ const TravauxComponent=observer(({route,navigation}:any)=>{
                     value={getWorkValue(wdt.id)} />
                 })
             }
-            <TssEditionValidation
-            navigation={navigation}
-                 project={project}
-                />
+            <TssEditionValidation  navigation={navigation}  project={project}/>
         </ScrollView>
     )
 

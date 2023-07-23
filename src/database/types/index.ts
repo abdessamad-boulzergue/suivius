@@ -53,6 +53,9 @@ export interface WorkDetails{
 export interface StatusUpdateResponseDto{
     projectId:number;
     stepStatusId:number;
+    stepStatusTitle:string
+    stepId:number,
+    stepTitle:string
 }
 
 export interface ProjectWorkDetails{
@@ -92,5 +95,5 @@ export interface DocumentProject{
 
 
 export type  UserPermission = "EDITER_TSS" | "PRE_VALIDATION_TSS" | "CONSULTATION" | "AFFECTATION" | "VALIDATION_TSS" | "EDITER_APD"
-                             | "VALIDATION_APD" | "PRE_VALIDATION_APD" 
+                             | "VALIDATION_APD" | "PRE_VALIDATION_APD" | "EDIT_REPORT" | "VALIDATE_REPORT" | "EDIT_AUTHORIZATION"
 

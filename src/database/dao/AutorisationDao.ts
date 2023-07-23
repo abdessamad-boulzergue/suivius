@@ -7,7 +7,7 @@ export interface Autorisation{
     id_project:string,
     date_demande:Date | undefined,
     date_commission:Date | undefined,
-    date_decision:Date | undefined,
+    decision:string | undefined,
     date_paiment:Date | undefined,
     date_sign:Date |undefined
 }
@@ -25,7 +25,7 @@ export default class AutorisationDao {
             id_project:autorisation.id_project,
             date_demande:autorisation.date_demande ?format(autorisation.date_demande, SIMPLE_DATE_FORMAT ) :"",
            date_commission:autorisation.date_commission ? format(autorisation.date_commission, SIMPLE_DATE_FORMAT):"",
-            date_decision:autorisation.date_decision? format(autorisation.date_decision, SIMPLE_DATE_FORMAT ):"",
+             decision:autorisation.decision,
              date_paiment:autorisation.date_paiment? format(autorisation.date_paiment, SIMPLE_DATE_FORMAT ):"",
               date_sign:autorisation.date_sign ?format(autorisation.date_sign, SIMPLE_DATE_FORMAT ):"",
         })
@@ -38,7 +38,7 @@ export default class AutorisationDao {
         this.database.update(this.TABLE_NAME,{
             date_demande:autorisation.date_demande ?format(autorisation.date_demande, SIMPLE_DATE_FORMAT ) :"",
            date_commission:autorisation.date_commission ? format(autorisation.date_commission, SIMPLE_DATE_FORMAT):"",
-            date_decision:autorisation.date_decision? format(autorisation.date_decision, SIMPLE_DATE_FORMAT ):"",
+           decision:autorisation.decision || "",
              date_paiment:autorisation.date_paiment? format(autorisation.date_paiment, SIMPLE_DATE_FORMAT ):"",
               date_sign:autorisation.date_sign ?format(autorisation.date_sign, SIMPLE_DATE_FORMAT ):"",
         },{id_project:id_project})
@@ -52,12 +52,12 @@ export default class AutorisationDao {
                this.database.selectFromTable(this.TABLE_NAME,[],{id_project:id_project})
                .then((resultSet)=>{
                    if(resultSet.length >0){
-                       const  {id_project,date_demande,date_commission,date_decision,date_paiment,date_sign} = resultSet.item(0);
+                       const  {id_project,date_demande,date_commission,decision,date_paiment,date_sign} = resultSet.item(0);
                        resolve ({
                         id_project,
                         date_demande:date_demande ?parse(date_demande, SIMPLE_DATE_FORMAT, new Date()) :undefined,
                         date_commission:date_commission ? parse(date_commission, SIMPLE_DATE_FORMAT, new Date()):undefined,
-                        date_decision:date_decision? parse(date_decision, SIMPLE_DATE_FORMAT, new Date()):undefined,
+                        decision:decision,
                         date_paiment:date_paiment? parse(date_paiment, SIMPLE_DATE_FORMAT, new Date()):undefined,
                         date_sign:date_sign ?parse(date_sign, SIMPLE_DATE_FORMAT, new Date()):undefined,
                        })

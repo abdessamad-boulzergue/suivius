@@ -3,12 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
-import ArticleConsumeComponent from './ArticleConsumeComponent';
+import BOQComponent from './BOQComponent';
 import EtudeComponentSummary from './EtudeComponentSummary';
 import DocumentSelectorDisplay from './DocumentPicker';
 import { useDao, useStores } from '../stores/context';
 import { Localisation } from '../database/dao/LocalisationDao';
 import { DOC_TYPES } from '../constants';
+import APDComponent from './APDComponent';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -56,17 +57,16 @@ export default function EtudeAPDScreen({route}:any) {
             project:project
           }}
         />
-        <Tab.Screen name="BOQ" component={ArticleConsumeComponent} 
+        <Tab.Screen name="BOQ" component={BOQComponent} 
         options={commonTopBarOptions}
           initialParams={{ 
             project:project
           }}
         />
-        <Tab.Screen name="APD" component={DocumentSelectorDisplay} 
+        <Tab.Screen name="APD" component={APDComponent} 
         options={commonTopBarOptions}
           initialParams={{ 
-            project:project,
-            type:DOC_TYPES.APD
+            project:project
           }}
         />
       </Tab.Navigator>

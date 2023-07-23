@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from 'react';
-import { Text, TouchableOpacity, View ,StyleSheet, ScrollView} from 'react-native';
+import { Text, FlatList, View ,StyleSheet, ScrollView} from 'react-native';
 
 import CollapsibleItem from '../components/CollapsibleItem';
 import { useDao, useStores } from '../stores/context';
@@ -13,12 +13,21 @@ import { DOC_TYPES } from '../constants';
 const EtudeComponentSummary = observer(({route}:any) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const project:Project = route.params?.project;
-  const [image, setImage] = useState<string|null>(null);
+  const [imageCroquis, setImageCroquis] = useState<string|null>(null);
+  const [photoTss,setPhotoTss] = useState<string[]>([]);
    const  getDocument= async () => {
     
-      const projDoc = projectObjectStore.getProjectsDocument(project.id,DOC_TYPES.CROQUIS)
-      if(projDoc && projDoc.length>0){
-        setImage(projDoc[0].content)
+      const imagesCroquis = projectObjectStore.getProjectsDocument(project.id,DOC_TYPES.CROQUIS)
+      if(imagesCroquis && imagesCroquis.length>0){
+        setImageCroquis(imagesCroquis[0].content)
+      }
+        const tssImages =   projectObjectStore.getProjectsDocument(project.id,DOC_TYPES.TSS_IMAGE)
+        console.log('###########\n tssImages \n ########### \n',tssImages.length)
+      if(tssImages && tssImages.length>0){
+       setPhotoTss(tssImages.map(img=>{
+        console.log('###########\n tssImages \n ########### \n',img.content.substring(0,20))
+        return img.content;
+       }))
       }
     
 }
@@ -45,22 +54,7 @@ const EtudeComponentSummary = observer(({route}:any) => {
 
      <CollapsibleItem title="TSS" >
         <View style={{padding:10}}>
-        <View style={styles.info}>
-                    <Text style={styles.text}>Site</Text>
-                    <Text style={styles.text}>{localisation?.site}</Text>
-        </View>
-        <View style={styles.info}>
-                    <Text style={styles.text}>Region</Text>
-                    <Text style={styles.text}>{localisation?.region}</Text>
-        </View>
-        <View style={styles.info}>
-                    <Text style={styles.text}>Province</Text>
-                    <Text style={styles.text}>{localisation?.province}</Text>
-        </View>
-        <View style={styles.info}>
-                    <Text style={styles.text}>Addresse</Text>
-                    <Text style={styles.text}>{localisation?.addresse}</Text>
-        </View>
+      
          <View style={styles.info}>
                                 <Text style={styles.text}>Type de cable </Text>
                                 <Text style={styles.text}>{getValue("cableTypeId",tss.cableTypeId)}</Text>
@@ -104,9 +98,27 @@ const EtudeComponentSummary = observer(({route}:any) => {
       <CollapsibleItem title="Croquis">
       <View >
         <View  style={{alignItems:"center", width: 100, height: 100 ,padding:10}}>
-        {image && <Image source={{ uri: image }} style={{ width: "100%", height: "100%" }} />}
-        {!image && <Text style={{color:'#000'}}> Croquis introuvable</Text>}
+        {imageCroquis && <Image source={{ uri: imageCroquis }} style={{ width: "100%", height: "100%" }} />}
+        {!imageCroquis && <Text style={{color:'#000'}}> Croquis introuvable</Text>}
       </View>
+      </View>
+      </CollapsibleItem>
+      <View style={{minHeight:10}}></View>
+      
+      <CollapsibleItem title="Photos">
+      <View >
+      <FlatList
+        data={photoTss}
+        numColumns={4} // Change this value to change the number of images per row
+        renderItem={({item}) => {
+          return (
+            <View  style={{alignItems:"center", width: "25%", height: 100 ,padding:10}}>
+              {item && <Image source={{ uri:  item }} style={{ width: "100%", height: "100%" }} />}
+            </View>
+          );
+        }}
+        keyExtractor={(item, index) => index.toString()}
+      />
       </View>
       </CollapsibleItem>
 

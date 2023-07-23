@@ -11,8 +11,9 @@ import RNFS from 'react-native-fs';
 import { uploadFiles } from "../../utils/uploadFiles";
 import { Article } from "./ArticleDao";
 import { ArticleConsume } from "./ArticleConsumeDao";
-import { AuthorizationDto, BoqDto, SquadDto, ToolUsageDto } from "../../services/types";
+import { ArticleConsumesDto, AuthorizationDto, BoqDto, IssueDto, ReportDto, SquadDto, StepStatusDto, ToolUsageDto } from "../../services/types";
 import { projectObjectStore } from "../../stores/objectsStore";
+import { asyncStorageGetItem } from "../../utils/cache/storage";
 
 export interface Project{
     id:number,
@@ -26,7 +27,8 @@ export interface Project{
     id_categorie:number
     id_step_status:number,
     id_tss:number | null;
-    step?:Step
+    step?:Step,
+    stepStatus?:StepStatusDto
 }
 const stepStatusFLow : {[key:string]:any}={
     "1":{previous:()=>null,next:()=>2 ,step:1},
@@ -217,6 +219,7 @@ export default class ProjectDao {
         this.database.insert(TABLES.PROJECT.name,project)
     }
     preValidateTss(project:Project):Promise<StatusUpdateResponseDto>{
+        
         return new Promise(async (resolve, reject) => {
             const tss :Tss|null= await this.stores.daoStores.tssDao.getById(project.id)
             const projectWorkDetailsDb = await this.stores.daoStores.projectWorkDetailsDao.getByIdProject(project.id)
@@ -231,28 +234,39 @@ export default class ProjectDao {
                      equipmentTypeId:tss.equipmentType,
                      workDetails:projectWorkDetailsDto
                 }
-                const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateTss(project.id),tssDto,"")
+                const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateTss(project.id),tssDto)
    
                 resolve(response.data);
 
             }
         })
     }
-    async addIssue(project_id:number, status_id:number, description:string){
-        await httpPost<Array<any>>( API_URL.issues(project_id),{stepStatusId:status_id,description:description},"")
+    async addIssue(project_id:number, status_id:number, description:string):Promise<IssueDto>{
+        const token: string = await asyncStorageGetItem("userToken");
+
+        return new Promise(async (resolve, reject) => {
+             const response = await httpPost<IssueDto>( API_URL.issues(project_id),{stepStatusId:status_id,description:description},token)
+             resolve(response.data);
+        })
     }
     async endIssue(project_id:number){
-        await httpPut( API_URL.issues(project_id),{},"");
+        await httpPut( API_URL.issues(project_id),{});
     }
     validateTss(project:Project):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-                const response = await httpPost<StatusUpdateResponseDto>( API_URL.validateTss(project.id),{},"")   
+                const response = await httpPost<StatusUpdateResponseDto>( API_URL.validateTss(project.id),{})  
+                resolve(response.data);
+        })
+    }
+    endActivity(project:Project):Promise<StatusUpdateResponseDto>{
+        return new Promise(async (resolve, reject) => {
+                const response = await httpPost<StatusUpdateResponseDto>( API_URL.endActivity(project.id),{})  
                 resolve(response.data);
         })
     }
     validateAPD(project:Project):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const response =   await httpPost<StatusUpdateResponseDto>( API_URL.validateAPD(project.id),{},"")   
+            const response =   await httpPost<StatusUpdateResponseDto>( API_URL.validateAPD(project.id),{})  
             resolve(response.data);
         })
     }
@@ -260,7 +274,7 @@ export default class ProjectDao {
         return new Promise(async (resolve, reject) => {
             const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startStudy(project_id),{
                 deviceId : projectObjectStore.uniqueId
-            },"")  
+            })  
             resolve(dto.data);
     })
     }
@@ -269,52 +283,86 @@ export default class ProjectDao {
             const dto = await httpPost<StatusUpdateResponseDto>( API_URL.startTss(project_id),{
                 deviceId : projectObjectStore.uniqueId,
                 ...position
-            },"")  
+            }) 
             resolve(dto.data);
     })
     }
-   async  sendToolUsage(project_id:number,usages:ToolUsageDto[]){
+    async validateReport(project_id:number,uid:string):Promise<ReportDto>{
         return new Promise(async (resolve, reject) => {
-            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.toolUsage(project_id),{
-                deviceId : projectObjectStore.uniqueId,
-                usages : usages
-            },"")  
+            const dto = await httpPost<ReportDto>( API_URL.validateReport(project_id,uid),{ }) 
             resolve(dto.data);
         })
     }
-    async sendSquadWork(project_id:number,squadWork:SquadDto[]){
+   async  sendToolUsage(project_id:number,report:ReportDto,usages:ToolUsageDto[]){
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.toolUsage(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                report:{
+                    ...report,
+                    usages : usages
+                }
+            }) 
+            resolve(dto.data);
+        })
+    }
+    async sendReport(project_id:number,report:ReportDto):Promise<StatusUpdateResponseDto>{
+        console.log("sendReport", project_id, report)
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.workReport(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                report : report
+            })
+            resolve(dto.data);
+        })
+    }
+    async sendArticleConsume(project_id:number,report:ReportDto,articleConsume:ArticleConsumesDto[]){
+        return new Promise(async (resolve, reject) => {
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.articleConsume(project_id),{
+                deviceId : projectObjectStore.uniqueId,
+                report:{
+                        ...report,
+                        consumes : articleConsume
+                    }
+            })
+            resolve(dto.data);
+        })
+    }
+    async sendSquadWork(project_id:number,report:ReportDto,squadWork:SquadDto[]){
         console.log("sendSquadWork", project_id, squadWork)
         return new Promise(async (resolve, reject) => {
             const dto = await httpPost<StatusUpdateResponseDto>( API_URL.staffWork(project_id),{
                 deviceId : projectObjectStore.uniqueId,
-                squad : squadWork
-            },"")
+                report:{
+                    ...report,
+                    squads : squadWork
+                }
+            })
             resolve(dto.data);
         })
     }
-    async  sendAuthorize(project_id:number,authorize:AuthorizationDto ){
+    async  sendAuthorize(project_id:number,authorize:AuthorizationDto ):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.authorization(project_id),authorize,"")  
+            const dto = await httpPost<StatusUpdateResponseDto>( API_URL.authorization(project_id),authorize)  
             resolve(dto.data);
         })
     }
 
     preValidateAPD(project:Project):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateAPD(project.id),{},"")   
+            const response = await httpPost<StatusUpdateResponseDto>( API_URL.preValidateAPD(project.id),{})  
                 resolve(response.data);
         })
     }
     rejectTSS(project:Project, motif:string):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-           const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectTss(project.id),{motif:motif},"")    
+           const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectTss(project.id),{motif:motif})   
          resolve(response.data);
 
         })
     }
     rejectAPD(project:Project,motif:string):Promise<StatusUpdateResponseDto>{
         return new Promise(async (resolve, reject) => {
-            const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectApd(project.id),{motif:motif},"")    
+            const response =await httpPost<StatusUpdateResponseDto>( API_URL.rejectApd(project.id),{motif:motif})   
             resolve(response.data);
 
         })
@@ -338,7 +386,8 @@ export default class ProjectDao {
             if(formDataImg.getParts().length>0){
                 const data = await sendFileToServer(API_URL.documents(DOC_TYPES.APD,project.id),formDataImg)
             }
-           const response =  await httpPost<StatusUpdateResponseDto>( API_URL.boq(project.id),{details:details},"")   
+           
+            const response =  await httpPost<StatusUpdateResponseDto>( API_URL.boq(project.id),{details:details})  
 
             resolve(response.data);     
          })
@@ -375,7 +424,7 @@ export default class ProjectDao {
                     const data = await sendFileToServer(API_URL.documents(DOC_TYPES.TSS_IMAGE,project.id),formDataImg)
                 }
 
-               const tssResponse = await httpPost<StatusUpdateResponseDto>( API_URL.tss(project.id),tssDto,"")
+               const tssResponse = await httpPost<StatusUpdateResponseDto>( API_URL.tss(project.id),tssDto)
 
                 resolve(tssResponse.data);
 
@@ -384,7 +433,7 @@ export default class ProjectDao {
     }
     getAllProjects():Promise<Array<Project>>{
         return new Promise((resolve, reject) => {
-         httpGet<Array<any>>(this.stores.apiStore.defaultUrl + API_URL.getProjects(),  this.stores.loginStore.userToken)
+         httpGet<Array<any>>(this.stores.apiStore.defaultUrl + API_URL.getProjects())
          .then(data=>{
             if(data)
                data.forEach(({category,step,stepStatus,id,title})=>{

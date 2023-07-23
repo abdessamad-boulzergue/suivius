@@ -14,10 +14,10 @@ export interface ModalListItem{
 export const ModalList =({data,visible, onClose}:{data:ModalListItem[],visible:boolean,onClose:(items:ModalListItem[])=>void})=> {
     const [selectedItem, setSelectedItem] = useState<Array<ModalListItem>>([]);
     onClose = onClose || (()=>{});
-    console.log("selected" ,  data)
 
     const closeModal=()=>{
-        onClose(selectedItem)
+        onClose([...selectedItem]);
+        setSelectedItem([]);
     }
     const onLongPress = (item:any) => {
         setSelectedItem((prevSelected) => {

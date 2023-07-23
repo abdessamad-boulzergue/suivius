@@ -7,6 +7,9 @@ import {inwi} from '../assets';
 import { Project } from '../database/dao/ProjectDao';
 
 import { useStores } from '../stores/context';
+import PrestataireSlider from '../components/PrestationSliderComponet';
+import { projectObjectStore } from '../stores/objectsStore';
+import ListProjectSuivieFinancierOverViews from './ListProjectSuivieFinancierOverViews';
  
 const Tab = createMaterialTopTabNavigator();
 
@@ -14,6 +17,7 @@ export default function ProjectScreen({navigation,route}:any) {
     const { next } = route.params;
     const nextRouteRef = useRef(next);
     const {rightsStore} = useStores();
+    const vendors = projectObjectStore.getVendors();
     useEffect(() => {
       
         nextRouteRef.current = next;
@@ -24,11 +28,7 @@ export default function ProjectScreen({navigation,route}:any) {
     <View style={styles.container}>
      
           <View style={styles.header}>
-            <Image
-              style={styles.headerImage}
-              source={inwi.imageSource}
-            />
-            <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
+            <PrestataireSlider vendors={vendors}></PrestataireSlider>
         </View>
         <Tab.Navigator>
         <Tab.Screen name="FTTS" component={ListProjectsOverViews}
@@ -38,11 +38,11 @@ export default function ProjectScreen({navigation,route}:any) {
             categorie:"1",
           }}
         />
-        <Tab.Screen name="B2B" component={ListProjectsOverViews} 
+        <Tab.Screen name="B2B" component={ListProjectSuivieFinancierOverViews} 
         options={commonTopBarOptions}
           initialParams={{ 
             interact:true,
-            categorie:"2",
+            categorie:"1",
           }}
         />
         <Tab.Screen name="FTTH" component={ListProjectsOverViews} 
@@ -59,12 +59,11 @@ export default function ProjectScreen({navigation,route}:any) {
 }
 const commonTopBarOptions= {
   tabBarStyle:{
-    borderBottomColor:'#F4F1F1',
-    borderBottomWidth:1,
     height:40,
   },
   tabBarIndicatorStyle: { 
-    backgroundColor: '#326972' 
+    backgroundColor: '#326972' ,
+    borderBottomWidth:0.1,
   },
 }
 const styles = StyleSheet.create({

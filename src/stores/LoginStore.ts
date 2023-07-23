@@ -7,6 +7,8 @@ import { asyncStorageSetItem } from '../utils/cache/storage';
 import { httpPost } from '../network/httpService';
 import UserManager from '../models/user';
 import { User } from '../database/types';
+import { login } from '../services';
+import { LoginResponseDto } from '../services/types';
  
 export interface InitialDataProps {
   firstName: string;
@@ -52,8 +54,8 @@ export class LoginStore {
       };
 
     getRefreshToken = async () => {
-        try {
-          const response = await httpPost<{data:{token:string,refreshToken:str}}>(
+    /*    try {
+          const response = await httpPost<{data:{token:string,refreshToken:string}}>(
             this.stores.apiStore.defaultUrl + API_URL.refreshTokenURL,
             {},
             this.refreshToken,
@@ -66,7 +68,7 @@ export class LoginStore {
           await asyncStorageSetItem('refreshToken', response.data.refreshToken);
         } catch (error) {
           console.log(error);
-        }
+        }*/
       };
     setTokenFromAsyncStorage = async () => {
         runInAction(() => {
@@ -82,25 +84,29 @@ export class LoginStore {
     regularLogin = async ({username, password}:{username :string, password:string}) => {
       const body = {username, password};
       
-      const user :User | null = await this.stores.daoStores.userDao.getUserByName(username)
-      console.log("USER : " , user,"  password ", password , "  ", typeof password , typeof user?.password)
-      if(user && user.password === password){
-        this.loggedUserManager = new UserManager(user);
+      const loginResponse :LoginResponseDto = await login({username, password})
+     
+
+      console.log(loginResponse)
+      if(loginResponse.token && loginResponse.userId){
         const {rightsStore} = this.stores;
-        rightsStore.setUser(user);
-       
-        this.loginHandler({data:{token:"test"}})
+        rightsStore.setUser({id:loginResponse.userId,username:loginResponse.name,password:"",isAdmin:false});
+        this.loginHandler(loginResponse.token )
       }
     };
     logout(): void {
-      runInAction(() => {
+        asyncStorageSetItem('userToken',"");
+      runInAction( () => {
         this.userToken = '';
     });
     }
 
-    loginHandler = async (response: any) => {
+    loginHandler = async (token: string) => {
+
+      await asyncStorageSetItem('userToken',token);
+
         runInAction(() => {
-            this.userToken = response.data.token;
+            this.userToken = token;
         });
     }
 

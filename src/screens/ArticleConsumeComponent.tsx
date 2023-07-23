@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Text,  StyleSheet, TextInput, FlatList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView
+    Text,  StyleSheet, TextInput, FlatList,Dimensions,SafeAreaView,ActivityIndicator, View,ScrollView, KeyboardAvoidingView
 } from 'react-native';
 
 
@@ -10,70 +10,92 @@ import { ArticleConsume } from '../database/dao/ArticleConsumeDao';
 import InputSearch from '../components/InputSearch';
 import { observer } from 'mobx-react-lite';
 import { projectObjectStore } from '../stores/objectsStore';
-import { BoqDto } from '../services/types';
+import { ArticleConsumesDto, BoqDto, ReportDto } from '../services/types';
 import APDEditionValidation from '../components/APDEditionValidation';
 import { ModalList, ModalListItem } from '../components/ModalList';
+import SButton from '../components/common/SButton';
+import { showAlert, showError } from '../components/toast';
+import { ROUTES } from '../constants';
+import ReportEditionValidation from '../components/ReportEditionValidation';
 
 
 
 const ArticleConsumeComponent =observer(({route,navigation}:any) => {
 
+    const  [report,setReport] = useState<ReportDto>(route.params.report);
+    const  [consumesData,setConsumesData] = useState<ArticleConsumesDto[]>([]);
     const  [project,setProject] = useState<Project>(route.params.project);
     const [articles,setArticles] = useState<ModalListItem[]>([]);
     const [modalVisible,setModalVisible] = useState<boolean>(false);
-    const {rightsStore} =useStores();
-    const {articleConsumeDao,projectDao} = useDao();
-    const [pages, setPages] = useState<ArticleConsume[]>([]);
+    const {projectDao} = useDao();
+    const [pages, setPages] = useState<BoqDto[]>([]);
 
    
     useEffect(()=>{
-       
-      const data:BoqDto[]  = projectObjectStore.getProjectsBOQ(project);
-      console.log("data BoqDto -------------------- ",data)
-       setPages(data.map(boq=>{
-        return {id_article:boq.articleId,quantity:boq.quantity,id_project:project.id}
-       }));
-       setArticles(projectObjectStore.articles.map(art=>{ return {id:art.id,title:art.title}}));
-      // getArticleConsumes();
+      const consumes:ArticleConsumesDto[]  = projectObjectStore.getProjectsArticleConsumes(project,report.uid);
+      setConsumesData(consumes);
+      const data:BoqDto[]  = projectObjectStore.getLeftBOQ(project);
+       setPages(data);
+       setArticles(projectObjectStore.getArticles().map(art=>{ return {id:art.id,title:art.title}}));
     },[])
-    const  getArticleConsumes= () => {
-        articleConsumeDao.getByIdProject(project.id).then(
-            (consumes)=>{
-                let data = [...pages];
-                consumes.forEach(cons=>{
-                  const idx = data.findIndex(ac=>ac.id_article==cons.id_article);
-                  if(idx!=null){
-                    data[idx].quantity = cons.quantity
-                  }else{
-                    data.push(cons);
-                  }
-                })
-                setPages(data);
-            }
-        );
-    }
+  
     const searchArticles=(text:string)=>{
       setModalVisible(true);
     }
-   const  onCloseArticleModal = (items:ModalListItem[])=>{
-    items.filter(item=> pages&& pages.findIndex(ac=>ac.id_article===item.id)==-1)
-    .forEach(item=>{
-      setPages([  ...pages,  {id_article:item.id,id_project:project.id, quantity:0}  ]);
+    const sendArticleConsume=()=>{
+      const consumes:ArticleConsumesDto[]  = projectObjectStore.getProjectsArticleConsumes(project,report.uid);
+      projectDao.sendArticleConsume(project.id,report,consumes)
+      showAlert("Rapport d'activité","est envoyé",()=>{
+        navigation.navigate(ROUTES.WORK_REPPORTS)
     })
+    }
+   const  onCloseArticleModal = (items:ModalListItem[])=>{
+   const updates =  items.filter(item=> pages&& pages.findIndex(ac=>ac.articleId===item.id)==-1)
+          .map(item=>{
+            return {articleId:item.id, quantity:0,title:item.title,unite:getUnit(item.id)};
+          })
+     
+     setPages([  ...pages, ...updates ]);
+
     setModalVisible(false)
     }
-    const getTitle =(item:ArticleConsume)=>{
-      return articles.filter(art=>art.id == item.id_article).map(art=>art.title).join("");
+    const getConsumeQte=(articleId:number)=>{
+      console.log(consumesData ,  articleId)
+      return consumesData.filter(cons=>cons.articleId===articleId)[0]?.quantity || 0;
     }
-    const updateQuantity =(item:ArticleConsume,quantity:number)=>{
-       
-       const index = pages.findIndex(ac=>ac.id_article===item.id_article)
-        setPages([...pages.slice(0, index),
-          {id_article:item.id_article,id_project:project.id, quantity:quantity} ,
-          ...pages.slice(index + 1),
-      ]);
-        articleConsumeDao.updateQuantity(project.id,item.id_article,quantity)
+    const getTitle =(id_article:number)=>{
+      return articles.filter(art=>art.id == id_article).map(art=>art.title).join("");
     }
+    const getUnit =(id_article:number)=>{
+      return projectObjectStore.getArticles().filter(art=>art.id == id_article).map(art=>art.unit).join("");
+    }
+    const updateQuantity =(item:BoqDto,quantity:number)=>{
+      if(quantity>item.quantity){
+        showError("quantité BOQ dépassé ",' quantité maximale autorisé est ' + item.quantity)
+      }else{
+        
+        const index = consumesData.findIndex(ac=>ac.articleId===item.articleId)
+          let update  :ArticleConsumesDto= {
+            date:report.date,
+            articleId:item.articleId,
+            quantity:quantity,
+            title:item.title,
+            unite:item.unite,
+            quantityReal:quantity,
+          }
+          const consumes:ArticleConsumesDto[]  = projectObjectStore.getProjectsArticleConsumes(project,report.uid);
+
+          let consumesUpdate = []
+          if(index!=-1)
+            consumesUpdate = [ ...consumes.slice(0,index),update, ...consumes.slice(index+1)]
+          else
+          consumesUpdate = [ ...consumes.slice(),update]
+          
+          setConsumesData(consumesUpdate)
+          projectObjectStore.setProjectsArticleConsumes(project ,report.uid,consumesUpdate)
+        
+      }
+      }
       const renderSeparator = () => {
         return <View style={styles.separator} />;
       };
@@ -87,21 +109,29 @@ const ArticleConsumeComponent =observer(({route,navigation}:any) => {
         return (
             <View style={{flex: 1,paddingTop:5}}>
                 <ModalList data={articles} visible={modalVisible} onClose={onCloseArticleModal} ></ModalList>
-
+                <ScrollView >
                 <View style={styles.dropdownContainer}>
                         <InputSearch onSearch={searchArticles} 
-                            value="" placeholder="recherher un collaborateur"></InputSearch>
+                            value="" placeholder="recherher une article"></InputSearch>
+                </View>
+                <View style={styles.header}>
+                          <Text  style={styles.hTitle} >Article </Text>
+                          <Text  style={styles.hUnite}>Unite</Text>
+                          <Text  style={styles.hQte}>Quantité</Text>
+                          <Text  style={styles.hQte}>Q.R</Text>
                 </View>
                 <FlatList data={pages} 
+                
                  renderItem={({item}) =>{ 
                     
                     return(
                         <View style={styles.listItem}>
-                          <Text  style={styles.itemTitle} >{getTitle(item)}</Text>
-                          <Text  style={styles.itemUnite}>Unité</Text>
-                          <TextInput
+                          <Text  style={styles.itemTitle} >{getTitle(item.articleId)}</Text>
+                          <Text  style={styles.itemUnite}>{getUnit(item.articleId)}</Text>
+                          <Text  style={styles.itemUnite}>{item.quantity}</Text>
+                           <TextInput
                             style={styles.inputDate}
-                              value = {item.quantity.toString()}
+                              value = {getConsumeQte(item.articleId).toString()}
                               keyboardType='numeric'
                               onChangeText={txt=>updateQuantity(item,parseFloat(txt))}
                               editable={true}
@@ -115,10 +145,9 @@ const ArticleConsumeComponent =observer(({route,navigation}:any) => {
                 ItemSeparatorComponent={renderSeparator}
 
                  />
-                  <APDEditionValidation
-                  navigation={navigation}
-                  project={project}
-                />
+          </ScrollView>
+
+          <ReportEditionValidation report={report} project={project} navigation={navigation}/>
             </View>
         );
     
@@ -128,15 +157,18 @@ const styles = StyleSheet.create({
   hTitle:{
     alignSelf:'center',
     marginLeft:20,
-    width:'50%'
+    width:'30%',
+    color:'#FFFFFF'
   },
   hUnite:{
     alignSelf:'center',
-    width:'30%'
+    width:'20%',
+    color:'#FFFFFF'
   },
   hQte:{
     alignSelf:'center',
-    width:'20%'
+    width:'25%',
+    color:'#FFFFFF'
   },
   header:{ 
     backgroundColor: '#326972',
@@ -157,7 +189,7 @@ const styles = StyleSheet.create({
         flex:1,
         alignSelf:'center',
         color:'#000000',
-        width: 30,
+        width:'20%',
         height:35,
         borderColor:"#cacaca",
         borderWidth:0.3,
@@ -204,13 +236,13 @@ const styles = StyleSheet.create({
         fontSize:15,
         alignSelf:'center',
         marginLeft:20,
-        width:'50%'
+        width:'30%'
     },
     itemUnite:{
       color:"#4a545a",
       fontSize:15,
       alignSelf:'center',
-       width:'30%'
+       width:'20%'
   },
 
     listItem:{

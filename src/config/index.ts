@@ -26,10 +26,12 @@ const TOKENS :{[key:string]:string} = {
   const API_URL={
     refreshTokenURL : API_ROOT_URL()+"/users/login/refresh",
     getProjects:()=>API_ROOT_URL()+"/projects",
+    authenticate:()=>API_ROOT_URL()+"/auth",
     tss:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/tss')),
     boq:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/boq')),
     preValidateTss:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/tss/preValidation')),
     validateTss:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/tss/validation')),
+    endActivity:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/close')),
     issues:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/issue')),
     preValidateAPD:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/apd/preValidation')),
     validateAPD:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/apd/validation')),
@@ -39,6 +41,9 @@ const TOKENS :{[key:string]:string} = {
     getUserPermissions:(user_id:any)=>API_ROOT_URL()+"/permissions/user/".concat(user_id),
     references:()=>API_ROOT_URL()+"/references",
     staff:()=>API_ROOT_URL()+"/staff",
+    workReport:(project_id:number)=>API_ROOT_URL()+"/reports/"+project_id+"/report",
+    validateReport:(project_id:number,uid:string)=>API_ROOT_URL()+"/projects/"+project_id+"/report/uid/"+uid,
+    articleConsume:(project_id:number)=>API_ROOT_URL()+"/projects/"+project_id+"/article/consume",
     squad:(project_id:number)=>API_ROOT_URL()+"/staff/project/"+project_id,
     staffWork:(project_id:number)=>API_ROOT_URL()+"/staff/project/"+project_id+"/work",
     toolUsage:(project_id:number)=>API_ROOT_URL()+"/tools/project/"+project_id,
@@ -48,7 +53,8 @@ const TOKENS :{[key:string]:string} = {
     rejectApd:(project_id:number)=>API_ROOT_URL()+"/projects/".concat(project_id.toString().concat('/apd/rejection')),
     documents:(type:string,project_id:number)=>API_ROOT_URL()+"/documents/project/" + project_id.toString() +"/files"+"/"+type,
     projectsDocumentsContentForUser:(user_id:number)=>API_ROOT_URL()+"/documents/projects/user/" + user_id.toString() +"/content",
-    articles:()=>API_ROOT_URL()+"/articles"
+    articles:()=>API_ROOT_URL()+"/articles",
+    vendors:()=>API_ROOT_URL()+"/vendors"
   }
 
   type RUN_TYPES = "DEBUG" | "DEV" | "TEST" | "PROD"

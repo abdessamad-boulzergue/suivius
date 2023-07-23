@@ -15,14 +15,17 @@ import LocalisationProjectScreen from '../screens/LocalisationProjectScreen';
 import EtudeReportScreen from '../screens/EtudeReportScreen';
 import BlocageComponent  from '../components/BlocageModal';
 import { useStores } from '../stores/context';
-import { loadArticles, loadProjectsDocumentForUser, loadReferences, loadUserPermissions, loadUserProjects, loadWorkInfos } from '../services';
+import { loadArticles, loadProjectsDocumentForUser, loadReferences, loadUserPermissions, loadUserProjects, loadVendors, loadWorkInfos } from '../services';
 import { projectObjectStore } from '../stores/objectsStore';
 import LoadingScreen from '../screens/LoadingScreen';
 import { dtosToSuiviePermission } from '../services/mappers';
 import RejectModal from '../components/RejectModal';
 import StaffActivityComponent from '../screens/StaffActivityComponent';
 import LoginScreen from '../screens/auth/LoginScreen';
-import WorkAndAuthorizationScreen from '../screens/WorkAndAuthorizationScreen';
+import AuthorizationScreen from '../screens/WorkAndAuthorizationScreen';
+import ReportsTabNavigator from '../screens/ReportsTabNavigator';
+import WorkScreen from '../screens/WorkScreen';
+import ConsultationScreen from '../screens/ConsultationScreen';
 
 const Stack = createStackNavigator();
 
@@ -58,11 +61,15 @@ const HomeStack = ({ navigation }:any) => {
              const docContentResponse=loadProjectsDocumentForUser(rightsStore.currentUser.id)
              const permissionsResponse=loadUserPermissions(rightsStore.currentUser.id)
              const articleResponse = loadArticles();
-             const [projects,references,infos,permissions,docContent,articles] = await Promise.all(
-                                                                          [projectsResponse,referencesResponse,
-                                                                          infosResponse,permissionsResponse,docContentResponse,
-                                                                          articleResponse
-                                                                        ]);
+             const vendorsResponse = loadVendors();
+             const [projects,references,infos,permissions,docContent,articles,
+                    vendors
+            ] = await Promise.all([
+                    projectsResponse,referencesResponse,
+                     infosResponse,permissionsResponse,docContentResponse,
+                      articleResponse,
+                      vendorsResponse
+                    ]);
               
              projectObjectStore.setProjectsDto(projects || []) 
               if (references) projectObjectStore.setReferences(references)
@@ -71,6 +78,7 @@ const HomeStack = ({ navigation }:any) => {
               rightsStore.setPermissions(dtosToSuiviePermission(permissions||[]))
               projectObjectStore.setProjectsDocumentForUser(docContent||[])
               projectObjectStore.setArticles(articles||[]);
+              projectObjectStore.setVendors(vendors || [])
               setIsLoading(false);
             } catch (error) {
               console.log('Error:', error);
@@ -108,8 +116,24 @@ return (
       />
      <Stack.Screen
         options={{ headerTitle: 'Activités'}}
-        component={WorkAndAuthorizationScreen}
-        name={ROUTES.WORK_TOOLS}
+        component={AuthorizationScreen}
+        name={ROUTES.AUTHORIZATION}
+      />
+
+      <Stack.Screen
+        options={{ headerTitle: "Rapports d'activités"}}
+        component={ReportsTabNavigator}
+        name={ROUTES.WORK_REPPORTS}
+      />
+      <Stack.Screen
+        options={{ headerTitle: "Consultation"}}
+        component={ConsultationScreen}
+        name={ROUTES.CONSULTATION}
+      />
+      <Stack.Screen
+        options={{ headerTitle: "Rapports d'activités"}}
+        component={WorkScreen}
+        name={ROUTES.WORK_EDIT}
       />
 
     <Stack.Screen

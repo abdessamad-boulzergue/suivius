@@ -3,15 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
-import ArticleConsumeComponent from './ArticleConsumeComponent';
-import EtudeComponentSummary from './EtudeComponentSummary';
-import DocumentSelectorDisplay from './DocumentPicker';
-import { useDao, useStores } from '../stores/context';
+import {useStores } from '../stores/context';
 import { Localisation } from '../database/dao/LocalisationDao';
-import { DOC_TYPES } from '../constants';
-import ToolsActivityComponent from './ToolsActivityComponent';
-import StaffActivityComponent from './StaffActivityComponent';
 import AutorizationScreen from './AutorizationScreen';
+import { inwi } from '../assets';
+import EtudeComponentSummary from './EtudeComponentSummary';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -29,50 +25,27 @@ export default function WorkAndAuthorizationScreen({route}:any) {
    },[])
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-                <View style={styles.info}>
-                    <Text style={styles.text}>client/site</Text>
-                    <Text style={styles.text}>{localisation?.site}</Text>
-                </View>
-                <View style={styles.info}>
-                    <Text style={styles.text}>region</Text>
-                    <Text style={styles.text}>{localisation?.region}</Text>
-                </View>
-                <View style={styles.info}>
-                    <Text style={styles.text}>province</Text>
-                    <Text style={styles.text}>{localisation?.province}</Text>
-                </View>
-                <View style={styles.info}>
-                    <Text style={styles.text}>address</Text>
-                    <Text style={styles.text}>{localisation?.addresse}</Text>
-                </View>
-                <View style={styles.info}>
-                    <Text style={styles.text}>Type de prestation</Text>
-                    <Text style={styles.text}>propre</Text>
-                </View>
-          </View>
+       <View style={styles.header}>
+            <Image
+              style={styles.headerImage}
+              source={inwi.imageSource}
+            />
+            <Text style={styles.headerText}> Lorem ipsum dolor sit amet,consectetur </Text>
+        </View>
       
       <Tab.Navigator>
-        <Tab.Screen name="Matériaux" component={ToolsActivityComponent} 
-        options={commonTopBarOptions}
-          initialParams={{ 
-            project:project
-          }}
-        />
-        <Tab.Screen name="Collaborateurs" component={StaffActivityComponent} 
-        options={commonTopBarOptions}
-          initialParams={{ 
-            project:project
-          }}
-        /> 
       <Tab.Screen name="Autorization" component={AutorizationScreen} 
         options={commonTopBarOptions}
           initialParams={{ 
             project:project
           }}
-        /> 
-
-
+        />  
+        <Tab.Screen name="Etude" component={EtudeComponentSummary} 
+        options={commonTopBarOptions}
+          initialParams={{ 
+            project:project
+          }}
+        />
       </Tab.Navigator>
     </View>
   );
@@ -92,17 +65,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding:10,
-        width:"100%",
-        height:250,
-        borderColor:"black",
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    height:"20%"
   },
   headerImage: {
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color:"black"
+    fontSize: 11,
+    fontFamily:"inter",
+    fontWeight: "500",
+    color:"black",
+    margin:5
   },
   info:{ 
     padding:10,

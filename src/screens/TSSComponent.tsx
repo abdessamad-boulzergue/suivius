@@ -18,35 +18,21 @@ import { TssDto } from "../services/types";
 const  TSSComponent = observer(({route,navigation}:any) => {
 
     const{ tssDao} = useDao();
-    const [project, setProject] = useState<Project>(route.params.project)
+    const [project, setProject] =  useState<Project>(projectObjectStore.getProject(route.params.project.id))
     const tss = projectObjectStore.getProjectTss(project);
+
+    console.log("TSSSSSSSSSSSSSSSSSSSSSSSSSSSSS,",'params : ',route.params.project.id,', store : ',project.id," \n")
 
     const {rightsStore} = useStores()
     const [cableType,setCableType] = useState<number>(tss?.cableTypeId);
     const [siteType,setSiteType] = useState<number>(tss?.siteTypeId);
     const [equipmentType,setEquipmentType] = useState<number>(tss?.equipmentTypeId);
     const [connectionType,setConnectionType] = useState<number>(tss?.connectionTypeId);
-    
+    console.log(rightsStore.hasPermission(project.id_step,project.id,"EDITER_TSS"),  [ETUDE_STATUS.EDITION_TSS,ETUDE_STATUS.MAJ_TSS],project.id_step_status,[ETUDE_STATUS.EDITION_TSS,ETUDE_STATUS.MAJ_TSS].indexOf(project.id_step_status)!=-1)
     const canedit        = rightsStore.hasPermission(project.id_step,project.id,"EDITER_TSS") &&  [ETUDE_STATUS.EDITION_TSS,ETUDE_STATUS.MAJ_TSS].indexOf(project.id_step_status)!=-1;
-    const canValidateTSS = rightsStore.hasPermission(project.id_step,project.id,'VALIDATION_TSS') && project.id_step_status ===ETUDE_STATUS.VALIDATION_TSS;
     const canValidate    = rightsStore.hasPermission(project.id_step,project.id,'PRE_VALIDATION_TSS') && project.id_step_status ===ETUDE_STATUS.PRE_VALIDATION_TSS;
 
     const canView= rightsStore.hasPermission(project.id_step,project.id,'CONSULTATION') || canedit || canValidate;
-    const [localisation, setLocalisation] = useState<Localisation|undefined>(undefined);
-
-   useEffect(()=>{
-      const localisation =projectObjectStore.getProjectLocalisation(project)
-      if(localisation)
-      setLocalisation({
-        addresse:localisation.address,
-        province:localisation.province,
-        region:localisation.region,
-        lat:localisation.lat,
-        lng:localisation.lng,
-        id:0,
-        site:localisation?.site
-      })
-   },[])
 
    useEffect(() => {
     saveTss();
@@ -81,14 +67,7 @@ const  TSSComponent = observer(({route,navigation}:any) => {
             <ScrollView  >
                  <View style={{padding:15}}pointerEvents={canedit||canValidate? 'auto':'none'} >
                 <Text style={{color:"#000"}}>Compte rendu de visite technique</Text>
-                
-                <SuiviInputText   style={{color:'#2F3437'}} title="Site" value={localisation?.site} />
-                <SuiviInputText   style={{color:'#2F3437'}} title="Region" value={localisation?.region}/>
-                <SuiviInputText   style={{color:'#2F3437'}} title="Province" value={localisation?.province}/>
-                <SuiviInputText   style={{color:'#2F3437'}} title="Addresse" value={localisation?.addresse}/>
-                <SuiviInputText  editable={canedit} style={{color:"#000"}} title="Latitude" value={localisation?.lat.toString()}/>
-                <SuiviInputText  editable={canedit} style={{color:"#000"}} title="Longitude" value={localisation?.lng.toString()}/>
-                
+                <Text></Text>  
                 <View style={styles.dropdownContainer}>
                     <Text style={styles.label}>type de câble site / odf</Text>
                         <View style={styles.pickerContainer}>
@@ -163,6 +142,7 @@ const  TSSComponent = observer(({route,navigation}:any) => {
                 </View>
                 </View>
                 <TssEditionValidation
+                style={{}}
                 navigation={navigation}
                  project={project}
                 />
